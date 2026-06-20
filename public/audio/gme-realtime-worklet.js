@@ -120,6 +120,17 @@ class GmeRealtimeProcessor extends AudioWorkletProcessor {
         if (this.exports && this.ready) this.exports.chip_start_track(this.currentTrack);
         this.port.postMessage({ type: "progress", currentTimeMs: 0, ended: false, rms: 0 });
         this.port.postMessage({ type: "state", state: "ready" });
+      } else if (data.type === "seek" && this.exports && this.ready) {
+        const targetMs = Math.max(0, Math.round(data.currentTimeMs));
+        if (!this.exports.chip_seek(targetMs)) {
+          throw new Error("无法跳转到指定时间。");
+        }
+        this.port.postMessage({
+          type: "progress",
+          currentTimeMs: this.exports.chip_tell(),
+          ended: false,
+          rms: 0
+        });
       } else if (data.type === "mute" && this.exports) {
         this.exports.chip_mute_voice(CHANNEL_TO_VOICE[data.channel], data.muted ? 1 : 0);
       }

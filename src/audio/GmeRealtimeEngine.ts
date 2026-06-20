@@ -129,6 +129,13 @@ export class GmeRealtimeEngine implements NsfEngine {
     if (this.state !== "empty") this.state = this.metadata ? "ready" : "empty";
   }
 
+  seek(seconds: number): void {
+    if (!this.node || !this.metadata || this.duration <= 0) return;
+    const target = Math.min(this.duration, Math.max(0, seconds));
+    this.currentTime = target;
+    this.node.port.postMessage({ type: "seek", currentTimeMs: target * 1000 });
+  }
+
   setVoiceMuted(channel: NesChannelId, muted: boolean): void {
     this.muted.set(channel, muted);
     this.node?.port.postMessage({ type: "mute", channel, muted });

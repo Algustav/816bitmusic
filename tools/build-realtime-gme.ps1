@@ -51,7 +51,7 @@ $wasm = Join-Path $output "realtime-gme.wasm"
   "-sALLOW_MEMORY_GROWTH=1" `
   "-sINITIAL_MEMORY=33554432" `
   "-sFILESYSTEM=0" `
-  "-sEXPORTED_FUNCTIONS=['_malloc','_free','_chip_load','_chip_destroy','_chip_start_track','_chip_render','_chip_mute_voice','_chip_mute_mask','_chip_set_fade','_chip_voice_count','_chip_voice_name','_chip_track_count','_chip_track_ended','_chip_tell','_chip_track_length','_chip_track_fade','_chip_last_error']" `
+  "-sEXPORTED_FUNCTIONS=['_malloc','_free','_chip_load','_chip_destroy','_chip_start_track','_chip_render','_chip_seek','_chip_mute_voice','_chip_mute_mask','_chip_set_fade','_chip_voice_count','_chip_voice_name','_chip_track_count','_chip_track_ended','_chip_tell','_chip_track_length','_chip_track_fade','_chip_last_error']" `
   -o $wasm
 if ($LASTEXITCODE -ne 0) { throw "Realtime GME WASM build failed." }
 

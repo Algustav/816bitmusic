@@ -38,6 +38,7 @@ export default function App() {
   const [themeId, setThemeId] = useState(initialThemeId);
   const [snapshot, setSnapshot] = useState<PlaybackSnapshot>(EMPTY_SNAPSHOT);
   const [selectedTrack, setSelectedTrack] = useState(1);
+  const [seekPreview, setSeekPreview] = useState<number | null>(null);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
   const { metadata, error, loading, muted, setLoadedFile, setLoading, setError, toggleMuted } =
     usePlayerStore();
@@ -70,6 +71,7 @@ export default function App() {
       setLoadedFile(data, nextMetadata);
       setSnapshot(engine.getSnapshot());
       setSelectedTrack(nextMetadata.startingTrack);
+      setSeekPreview(null);
       setPlaybackError(null);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "无法读取文件。");
@@ -116,6 +118,7 @@ export default function App() {
 
   const stopPlayback = () => {
     engine.stop();
+    setSeekPreview(null);
     setSnapshot(engine.getSnapshot());
   };
 
@@ -123,6 +126,12 @@ export default function App() {
     if (!metadata) return;
     const next = Math.min(metadata.trackCount, Math.max(1, selectedTrack + direction));
     if (next !== selectedTrack) await playTrack(next);
+  };
+
+  const commitSeek = (seconds: number) => {
+    engine.seek(seconds);
+    setSeekPreview(null);
+    setSnapshot(engine.getSnapshot());
   };
 
   return (
@@ -237,14 +246,24 @@ export default function App() {
               STOP
             </button>
             <div className="transport__time">
-              <span>{formatTime(snapshot.currentTime)}</span>
-              <i>
-                <b
-                  style={{
-                    width: `${snapshot.duration ? (snapshot.currentTime / snapshot.duration) * 100 : 0}%`
-                  }}
-                />
-              </i>
+              <span>{formatTime(seekPreview ?? snapshot.currentTime)}</span>
+              <input
+                className="transport__seek"
+                type="range"
+                min="0"
+                max={snapshot.duration || 0}
+                step="0.1"
+                value={seekPreview ?? Math.min(snapshot.currentTime, snapshot.duration || 0)}
+                disabled={!snapshot.duration || snapshot.state === "rendering"}
+                aria-label="播放进度"
+                onChange={(event) => setSeekPreview(Number(event.target.value))}
+                onPointerUp={(event) => commitSeek(Number(event.currentTarget.value))}
+                onKeyUp={(event) => {
+                  if (["ArrowLeft", "ArrowRight", "Home", "End", "PageUp", "PageDown"].includes(event.key)) {
+                    commitSeek(Number(event.currentTarget.value));
+                  }
+                }}
+              />
               <span title={snapshot.durationWasEstimated ? "NSF 未提供时长；当前为渲染上限估算" : ""}>
                 {snapshot.durationWasEstimated ? "~" : ""}
                 {formatTime(snapshot.duration)}

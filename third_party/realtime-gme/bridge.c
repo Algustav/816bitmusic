@@ -46,6 +46,12 @@ int chip_render(int16_t* output, int sample_count) {
 }
 
 EMSCRIPTEN_KEEPALIVE
+int chip_seek(int milliseconds) {
+  if (!player || milliseconds < 0) return 0;
+  return capture_error(gme_seek(player, milliseconds));
+}
+
+EMSCRIPTEN_KEEPALIVE
 void chip_mute_voice(int voice, int muted) {
   if (player) gme_mute_voice(player, voice, muted);
 }

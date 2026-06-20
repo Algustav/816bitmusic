@@ -13,6 +13,7 @@
 - 自编译 GME / WebAssembly + AudioWorklet 实时播放
 - NSFe 专辑曲目列表与点击即播
 - 播放、暂停、停止、上一首和下一首
+- 可拖动播放进度条
 - 标准 NES 五声道独立 Mute
 - Cloudflare Pages 静态部署基础配置
 
