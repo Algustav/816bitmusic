@@ -1,0 +1,3 @@
+[submodule "third_party/game-music-emu"]
+	path = third_party/game-music-emu
+	url = https://github.com/libgme/game-music-emu.git

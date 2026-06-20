@@ -57,6 +57,8 @@ function parseNsf(bytes: Uint8Array, fileName: string): NsfMetadata {
     region,
     expansionAudio: expansionAudio(bytes[0x7b]),
     trackTitles: [],
+    trackTimesMs: [],
+    trackFadesMs: [],
     fileName,
     fileSize: bytes.byteLength
   };
@@ -72,6 +74,8 @@ function parseNsfe(bytes: Uint8Array, fileName: string): NsfMetadata {
   let region: NsfMetadata["region"] = "Unknown";
   let expansions: string[] = [];
   let trackTitles: string[] = [];
+  let trackTimesMs: number[] = [];
+  let trackFadesMs: number[] = [];
 
   while (offset + 8 <= bytes.length) {
     const view = new DataView(bytes.buffer, bytes.byteOffset + offset, 8);
@@ -96,6 +100,13 @@ function parseNsfe(bytes: Uint8Array, fileName: string): NsfMetadata {
         .split("\0")
         .slice(0, trackCount || undefined)
         .map((value) => value.trim());
+    } else if ((id === "time" || id === "fade") && data.length % 4 === 0) {
+      const values = Array.from(
+        { length: data.length / 4 },
+        (_, index) => new DataView(data.buffer, data.byteOffset, data.byteLength).getInt32(index * 4, true)
+      );
+      if (id === "time") trackTimesMs = values;
+      else trackFadesMs = values;
     } else if (id === "NEND") {
       break;
     }
@@ -114,6 +125,8 @@ function parseNsfe(bytes: Uint8Array, fileName: string): NsfMetadata {
     region,
     expansionAudio: expansions,
     trackTitles,
+    trackTimesMs,
+    trackFadesMs,
     fileName,
     fileSize: bytes.byteLength
   };

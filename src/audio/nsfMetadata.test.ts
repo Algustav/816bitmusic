@@ -18,6 +18,7 @@ describe("parseNsfMetadata", () => {
     expect(metadata.startingTrack).toBe(2);
     expect(metadata.expansionAudio).toEqual(["Konami VRC6"]);
     expect(metadata.trackTitles).toEqual([]);
+    expect(metadata.trackTimesMs).toEqual([]);
   });
 
   it("rejects unrelated files", () => {
@@ -37,11 +38,15 @@ describe("parseNsfMetadata", () => {
     info[8] = 2;
     const auth = encoder.encode("Contra（魂斗罗）\u0000作者\u00001988 Konami\u0000");
     const labels = encoder.encode("丛林\0瀑布\0");
+    const times = new Uint8Array(8);
+    new DataView(times.buffer).setInt32(0, 43_000, true);
+    new DataView(times.buffer).setInt32(4, 90_000, true);
     const chunks = [
       encoder.encode("NSFE"),
       chunk("INFO", info),
       chunk("auth", auth),
       chunk("tlbl", labels),
+      chunk("time", times),
       chunk("NEND", new Uint8Array())
     ];
     const size = chunks.reduce((total, item) => total + item.length, 0);
@@ -56,5 +61,6 @@ describe("parseNsfMetadata", () => {
     expect(metadata.title).toBe("Contra（魂斗罗）");
     expect(metadata.artist).toBe("作者");
     expect(metadata.trackTitles).toEqual(["丛林", "瀑布"]);
+    expect(metadata.trackTimesMs).toEqual([43_000, 90_000]);
   });
 });

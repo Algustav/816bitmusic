@@ -10,6 +10,8 @@ export interface NsfMetadata {
   region: "NTSC" | "PAL" | "Dual" | "Unknown";
   expansionAudio: string[];
   trackTitles: string[];
+  trackTimesMs: number[];
+  trackFadesMs: number[];
   fileName: string;
   fileSize: number;
 }

@@ -7,5 +7,6 @@ dist/
 Thumbs.db
 __pycache__/
 .analysis-*/
+.tooling/
 FC_Music_Collection_*/
 FC_Music_Collection_*.zip

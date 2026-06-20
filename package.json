@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "build:gme": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/build-realtime-gme.ps1",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest run",

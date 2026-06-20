@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { applyCssTheme, defaultTheme, getTheme, listThemes } from "../theme-kit/theme.js";
-import { GmeRenderedEngine, type PlaybackSnapshot } from "./audio/GmeRenderedEngine";
+import { GmeRealtimeEngine, type PlaybackSnapshot } from "./audio/GmeRealtimeEngine";
 import type { NesChannelId } from "./audio/types";
 import { ChannelRack } from "./components/ChannelRack";
 import { FileDropZone } from "./components/FileDropZone";
@@ -8,7 +8,7 @@ import { usePlayerStore } from "./store/playerStore";
 import { adaptThemeForPlayer } from "./theme/adaptThemeForPlayer";
 
 const STORAGE_KEY = "chip-player-theme";
-const engine = new GmeRenderedEngine();
+const engine = new GmeRealtimeEngine();
 const EMPTY_SNAPSHOT: PlaybackSnapshot = {
   state: "empty",
   track: 1,
@@ -251,7 +251,7 @@ export default function App() {
             </li>
           </ol>
           <p className="diagnostic-note">
-            首次播放会在本地 Worker 中预渲染五条声道，可能需要数秒。文件不会上传服务器。
+            音乐由 AudioWorklet 实时生成，无需预渲染整首曲目。文件不会上传服务器。
           </p>
         </aside>
       </div>
@@ -263,13 +263,13 @@ export default function App() {
             <h2>NES Channels</h2>
           </div>
           <span className={`badge ${snapshot.duration ? "" : "badge--muted"}`}>
-            {snapshot.duration ? "5 VOICES READY" : "WAITING FOR RENDER"}
+            {snapshot.state !== "empty" ? "REALTIME ENGINE" : "WAITING FOR FILE"}
           </span>
         </div>
         <ChannelRack
           theme={theme}
           muted={muted}
-          enabled={snapshot.duration > 0}
+          enabled={snapshot.state !== "empty"}
           onToggle={toggleChannel}
         />
       </section>

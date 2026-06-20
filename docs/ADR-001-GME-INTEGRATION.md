@@ -1,6 +1,6 @@
 # ADR-001：GME 采用实时桥接，而非整曲预渲染
 
-状态：暂定，等待第一份 GME/WASM 原型验证  
+状态：已采用  
 日期：2026-06-20
 
 ## 背景
@@ -74,3 +74,23 @@ mute_voices
 - 五声道分离渲染可用于验证即时 Gain Mute。
 
 这证明预构建 WASM 与目标样本兼容，但不改变“正式版本应自行从锁定源码构建”的决定。
+
+## 实时实现结果
+
+项目已固定官方 GME submodule：
+
+```text
+dd3182a8bdae3ff761438632aace418fbcaed439
+```
+
+自有 C 桥编译为不依赖 Emscripten JavaScript glue 的 standalone WASM，
+由 AudioWorklet 直接实例化。主线程预编译 `WebAssembly.Module` 后通过
+MessagePort 传入音频线程。
+
+已用 `04 - Kage（赤影战士）.nsfe` 验证底层接口：
+
+- 12 个子曲目
+- 5 个标准 NES 声道
+- 第 1 曲 `time` 为 43 秒
+- 128 帧分块渲染可用
+- 编译产物约 154 KB
