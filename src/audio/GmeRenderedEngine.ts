@@ -36,6 +36,7 @@ export interface PlaybackSnapshot {
   duration: number;
   currentTime: number;
   durationWasEstimated: boolean;
+  endedRevision: number;
 }
 
 export class GmeRenderedEngine implements NsfEngine {
@@ -53,6 +54,7 @@ export class GmeRenderedEngine implements NsfEngine {
   private startedAt = 0;
   private offset = 0;
   private state: PlaybackSnapshot["state"] = "empty";
+  private endedRevision = 0;
   private durationWasEstimated = false;
   private renderToken = 0;
 
@@ -65,6 +67,7 @@ export class GmeRenderedEngine implements NsfEngine {
     this.metadata = parseNsfMetadata(data, fileName);
     this.currentTrack = this.metadata.startingTrack;
     this.renderedChannels = null;
+    this.endedRevision = 0;
     this.state = "ready";
     return this.metadata;
   }
@@ -97,6 +100,16 @@ export class GmeRenderedEngine implements NsfEngine {
     if (this.state !== "empty") this.state = this.metadata ? "ready" : "empty";
   }
 
+  seek(seconds: number): void {
+    if (!this.renderedChannels || this.duration <= 0) return;
+    const target = Math.min(this.duration, Math.max(0, seconds));
+    const wasPlaying = this.state === "playing";
+    this.stopSources();
+    this.offset = target;
+    this.state = "paused";
+    if (wasPlaying) this.startSources(target);
+  }
+
   setVoiceMuted(channel: NesChannelId, muted: boolean): void {
     this.muted.set(channel, muted);
     const gain = this.gains.get(VOICE_NAME_BY_CHANNEL[channel]);
@@ -123,7 +136,8 @@ export class GmeRenderedEngine implements NsfEngine {
       track: this.currentTrack,
       duration: this.duration,
       currentTime,
-      durationWasEstimated: this.durationWasEstimated
+      durationWasEstimated: this.durationWasEstimated,
+      endedRevision: this.endedRevision
     };
   }
 
@@ -229,6 +243,7 @@ export class GmeRenderedEngine implements NsfEngine {
         if (this.state === "playing") {
           this.offset = 0;
           this.state = "ready";
+          this.endedRevision += 1;
           this.stopSources();
         }
       };

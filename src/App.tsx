@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { applyCssTheme, defaultTheme, getTheme, listThemes } from "../theme-kit/theme.js";
-import { GmeRealtimeEngine, type PlaybackSnapshot } from "./audio/GmeRealtimeEngine";
+import type { PlaybackSnapshot } from "./audio/GmeRealtimeEngine";
+import { engineMode, playerEngine as engine } from "./audio/playerEngine";
 import type { NesChannelId } from "./audio/types";
 import { AlbumLibrary } from "./components/AlbumLibrary";
 import { ChannelRack } from "./components/ChannelRack";
@@ -10,7 +11,6 @@ import { usePlayerStore } from "./store/playerStore";
 import { adaptThemeForPlayer } from "./theme/adaptThemeForPlayer";
 
 const STORAGE_KEY = "chip-player-theme";
-const engine = new GmeRealtimeEngine();
 const EMPTY_SNAPSHOT: PlaybackSnapshot = {
   state: "empty",
   track: 1,
@@ -193,9 +193,11 @@ export default function App() {
 
       <section className="status-strip">
         <span className="status-dot" />
-        <strong>REALTIME GME</strong>
+        <strong>{engineMode === "realtime" ? "REALTIME GME" : "COMPAT GME"}</strong>
         <span>{metadata ? metadata.title : "SELECT AN ALBUM"}</span>
-        <span className="status-strip__right">{snapshot.state.toUpperCase()}</span>
+        <span className="status-strip__right">
+          {engineMode === "compatibility" ? "HTTP FALLBACK" : snapshot.state.toUpperCase()}
+        </span>
       </section>
 
       <div className="workspace">
@@ -331,7 +333,11 @@ export default function App() {
             <h2>NES Channels</h2>
           </div>
           <span className={`badge ${snapshot.duration ? "" : "badge--muted"}`}>
-            {snapshot.state !== "empty" ? "REALTIME ENGINE" : "WAITING FOR FILE"}
+            {snapshot.state !== "empty"
+              ? engineMode === "realtime"
+                ? "REALTIME ENGINE"
+                : "COMPAT ENGINE"
+              : "WAITING FOR FILE"}
           </span>
         </div>
         <ChannelRack

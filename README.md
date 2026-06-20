@@ -16,6 +16,7 @@
 - 播放、暂停、停止、上一首和下一首
 - 可拖动播放进度条
 - 单曲循环与专辑列表循环
+- 局域网 HTTP 自动回退至兼容播放引擎
 - 标准 NES 五声道独立 Mute
 - Cloudflare Pages 静态部署基础配置
 
@@ -48,6 +49,10 @@ Output directory: dist
 当前内置专辑通过 Vite 在构建时从 `FC_Music_Collection_1_NSFe/` 收集并输出为
 独立静态资源。部署机器必须在执行 `npm run build` 时拥有该目录；生成后的
 `dist/` 不再依赖源目录。
+
+AudioWorklet 要求安全上下文。`localhost` 和 HTTPS 使用实时引擎；通过
+`http://局域网IP:端口` 访问时自动使用预渲染兼容引擎，页面会显示
+`COMPAT GME / HTTP FALLBACK`。正式部署到 Cloudflare Pages 后会恢复实时引擎。
 
 ## 当前播放限制
 

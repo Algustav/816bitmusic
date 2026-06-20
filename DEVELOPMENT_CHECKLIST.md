@@ -112,6 +112,7 @@ src/
 - [x] 读取 NSFe 内嵌子曲目标题；经典 NSF 缺失时回退为编号
 - [x] 初始化 AudioContext
 - [x] 使用 AudioWorklet 连续生成音频
+- [x] 非安全上下文自动回退到兼容播放引擎
 - [x] 实现播放、暂停和停止（实时 AudioWorklet）
 - [x] 实现子曲目切换（实时 AudioWorklet）
 - [ ] 实现循环与淡出
