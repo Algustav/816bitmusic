@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+*.log
+.DS_Store
+Thumbs.db
+__pycache__/
+.analysis-*/
+FC_Music_Collection_*/
+FC_Music_Collection_*.zip

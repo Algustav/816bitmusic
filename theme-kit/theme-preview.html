@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Theme Kit Preview</title>
+  <link rel="stylesheet" href="./theme.css">
+  <style>
+    header {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: clamp(34px, 7vw, 64px);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .card {
+      display: grid;
+      gap: 12px;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.15;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .sample {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background:
+        linear-gradient(90deg, var(--grid-a) 1px, transparent 1px) 0 0 / 24px 24px,
+        linear-gradient(var(--grid-b) 1px, transparent 1px) 0 0 / 24px 24px,
+        var(--bg);
+    }
+
+    .chips {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .chip {
+      min-height: 30px;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <main class="theme-page theme-stack">
+    <header>
+      <h1 class="theme-title">Theme Kit Preview</h1>
+      <p class="theme-muted">当前页面外壳会跟随 URL 或本地存储里的主题，每张卡片展示对应主题自己的变量。</p>
+      <div class="toolbar">
+        <select class="theme-select" id="themeSelect" aria-label="选择主题"></select>
+        <a class="theme-link secondary" href="./theme-preview.html">重置预览</a>
+      </div>
+    </header>
+
+    <section class="theme-grid" id="themeGrid" aria-label="主题预览"></section>
+  </main>
+
+  <script type="module">
+    import { applyPageTheme, activeTheme } from "./page-theme.js";
+    import { applyCssTheme, getTheme, listThemes } from "./theme.js";
+
+    const STORAGE_KEY = document.documentElement.dataset.themeStorageKey || "theme-kit-theme";
+    const pieceOrder = ["I", "O", "T", "S", "Z", "J", "L"];
+    const themeSelect = document.querySelector("#themeSelect");
+    const themeGrid = document.querySelector("#themeGrid");
+
+    listThemes().forEach(theme => {
+      const option = document.createElement("option");
+      option.value = theme.id;
+      option.textContent = theme.name;
+      themeSelect.append(option);
+    });
+    themeSelect.value = activeTheme.id;
+
+    themeSelect.addEventListener("change", () => {
+      const theme = getTheme(themeSelect.value);
+      applyCssTheme(theme);
+      document.documentElement.dataset.theme = theme.id;
+      localStorage.setItem(STORAGE_KEY, theme.id);
+    });
+
+    listThemes().forEach(theme => {
+      const card = document.createElement("section");
+      card.className = "theme-panel card";
+      Object.entries(theme.css).forEach(([name, value]) => card.style.setProperty(name, value));
+      card.style.setProperty("--board", theme.boardBackground);
+
+      const title = document.createElement("h2");
+      title.textContent = theme.name;
+      const desc = document.createElement("p");
+      desc.textContent = theme.description;
+
+      const sample = document.createElement("div");
+      sample.className = "sample";
+      const swatches = document.createElement("div");
+      swatches.className = "theme-swatch-row";
+      pieceOrder.forEach(type => {
+        const swatch = document.createElement("span");
+        swatch.className = "theme-swatch";
+        swatch.style.background = theme.colors[type];
+        swatch.textContent = type;
+        swatches.append(swatch);
+      });
+      const chips = document.createElement("div");
+      chips.className = "chips";
+      ["--bg", "--panel", "--line", "--accent"].forEach(name => {
+        const chip = document.createElement("span");
+        chip.className = "chip";
+        chip.style.background = theme.css[name];
+        chips.append(chip);
+      });
+      sample.append(swatches, chips);
+      card.append(title, desc, sample);
+      themeGrid.append(card);
+    });
+
+    applyPageTheme({ persist: false });
+  </script>
+</body>
+</html>

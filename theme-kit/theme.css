@@ -1,0 +1,122 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color: var(--text);
+  background: var(--bg);
+  font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--text);
+  background:
+    linear-gradient(90deg, var(--grid-a) 1px, transparent 1px) 0 0 / 34px 34px,
+    linear-gradient(var(--grid-b) 1px, transparent 1px) 0 0 / 34px 34px,
+    radial-gradient(circle at 18% 14%, var(--glow-a), transparent 30%),
+    radial-gradient(circle at 86% 76%, var(--glow-b), transparent 26%),
+    var(--bg);
+}
+
+.theme-page {
+  width: min(100%, 1080px);
+  margin: 0 auto;
+  padding: 28px;
+}
+
+.theme-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.theme-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)), var(--panel);
+  box-shadow: 0 16px 36px var(--shadow);
+  padding: 18px;
+}
+
+.theme-muted {
+  color: var(--muted);
+}
+
+.theme-title {
+  margin: 0;
+  color: var(--text);
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.theme-button,
+.theme-link {
+  min-height: 40px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 6px;
+  color: #07120f;
+  background: var(--accent);
+  font: inherit;
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.theme-button.secondary,
+.theme-link.secondary {
+  color: var(--text);
+  background: var(--touch-bg);
+}
+
+.theme-input,
+.theme-select,
+.theme-textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  background: var(--key-bg);
+  font: inherit;
+  padding: 10px 12px;
+  outline: none;
+}
+
+.theme-input:focus,
+.theme-select:focus,
+.theme-textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent), transparent 78%);
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.theme-swatch-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.theme-swatch {
+  min-height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  color: rgba(0, 0, 0, .72);
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.24), inset 0 -7px rgba(0,0,0,.14);
+}
+
+@media (max-width: 640px) {
+  .theme-page {
+    padding: 18px;
+  }
+}
