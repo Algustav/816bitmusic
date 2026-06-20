@@ -57,6 +57,10 @@ AudioWorklet 要求安全上下文。`localhost` 和 HTTPS 使用实时引擎；
 iOS Safari 的兼容引擎使用 `AudioContext.createBuffer()`，并在预渲染期间保持
 音频会话激活；真正调度音源前会再次确认 AudioContext 已进入运行状态。
 
+当 iPhone / iPad 通过局域网 HTTP 访问时，播放器会进一步切换为
+`IOS MEDIA` 模式：将混合 PCM 封装为 WAV 后交给 Safari 原生 `<audio>`
+播放，以绕过 iOS Web Audio 的静音会话限制。此模式暂不提供独立声道 Mute。
+
 ## 当前播放限制
 
 - 经典 NSF 通常不含子曲目标题；没有 `.m3u` 等外部曲目表时只能显示编号。

@@ -51,7 +51,7 @@ function detectAudibleLength(channelSamples, sampleRate, fallbackFrames) {
 }
 
 self.onmessage = async (event) => {
-  const { fileData, fileId, track } = event.data;
+  const { fileData, fileId, track, renderMode = "channels" } = event.data;
 
   try {
     const gme = await getModule();
@@ -61,16 +61,34 @@ self.onmessage = async (event) => {
       currentFileId = fileId;
     }
 
-    gme.FS.writeFile("voices.txt", new TextEncoder().encode(VOICE_NAMES.join("\n")));
     renderPcm ??= gme.cwrap(
       "generatePCMfileAndReturnInfo",
       "string",
       ["number", "number", "boolean", "boolean", "boolean"]
     );
 
-    const info = renderPcm(track, 100, isDifferentFile, true, false).split(", ");
+    if (renderMode === "channels") {
+      gme.FS.writeFile("voices.txt", new TextEncoder().encode(VOICE_NAMES.join("\n")));
+    }
+    const info = renderPcm(track, 100, isDifferentFile, renderMode === "channels", false).split(", ");
     const metadataDurationMs = Number.parseInt(info[0], 10);
     const loopStartMs = Number.parseInt(info[1], 10);
+
+    if (renderMode === "mixed") {
+      const mixed = monoFromStereoBytes(gme.FS.readFile("/pcmOut.raw"));
+      self.postMessage(
+        {
+          type: "rendered-mixed",
+          sampleRate: SAMPLE_RATE,
+          durationMs: metadataDurationMs,
+          loopStartMs,
+          samples: mixed.buffer
+        },
+        [mixed.buffer]
+      );
+      return;
+    }
+
     const rendered = {};
 
     for (const voiceName of VOICE_NAMES) {

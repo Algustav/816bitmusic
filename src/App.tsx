@@ -193,10 +193,16 @@ export default function App() {
 
       <section className="status-strip">
         <span className="status-dot" />
-        <strong>{engineMode === "realtime" ? "REALTIME GME" : "COMPAT GME"}</strong>
+        <strong>
+          {engineMode === "realtime"
+            ? "REALTIME GME"
+            : engineMode === "ios-media"
+              ? "IOS MEDIA"
+              : "COMPAT GME"}
+        </strong>
         <span>{metadata ? metadata.title : "SELECT AN ALBUM"}</span>
         <span className="status-strip__right">
-          {engineMode === "compatibility" ? "HTTP FALLBACK" : snapshot.state.toUpperCase()}
+          {engineMode === "realtime" ? snapshot.state.toUpperCase() : "HTTP FALLBACK"}
         </span>
       </section>
 
@@ -336,14 +342,16 @@ export default function App() {
             {snapshot.state !== "empty"
               ? engineMode === "realtime"
                 ? "REALTIME ENGINE"
-                : "COMPAT ENGINE"
+                : engineMode === "ios-media"
+                  ? "IOS MEDIA ENGINE"
+                  : "COMPAT ENGINE"
               : "WAITING FOR FILE"}
           </span>
         </div>
         <ChannelRack
           theme={theme}
           muted={muted}
-          enabled={snapshot.state !== "empty"}
+          enabled={snapshot.state !== "empty" && engineMode !== "ios-media"}
           onToggle={toggleChannel}
         />
       </section>
