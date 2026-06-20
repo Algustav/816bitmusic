@@ -23,6 +23,28 @@ export function AlbumLibrary({
         <span>{albums.length} ALBUMS</span>
       </header>
 
+      <label className="album-mobile-select">
+        <span>SELECT ALBUM</span>
+        <select
+          className="theme-select"
+          value={selectedAlbumId ?? ""}
+          disabled={Boolean(loadingAlbumId)}
+          onChange={(event) => {
+            const album = albums.find((item) => item.id === event.target.value);
+            if (album) onSelect(album);
+          }}
+        >
+          <option value="" disabled>
+            请选择专辑…
+          </option>
+          {albums.map((album) => (
+            <option key={album.id} value={album.id}>
+              {String(album.number).padStart(2, "0")} · {album.displayName}
+            </option>
+          ))}
+        </select>
+      </label>
+
       <div className="album-grid">
         {albums.map((album) => {
           const selected = selectedAlbumId === album.id;

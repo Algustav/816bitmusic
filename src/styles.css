@@ -148,6 +148,10 @@ button:disabled {
   background: var(--line);
 }
 
+.album-mobile-select {
+  display: none;
+}
+
 .album-card {
   position: relative;
   min-height: 58px;
@@ -751,13 +755,56 @@ button:disabled {
     display: none;
   }
 
+  .status-strip {
+    position: relative;
+    display: grid;
+    grid-template-columns: 10px 1fr;
+    gap: 4px 9px;
+    align-items: center;
+    padding: 9px 11px;
+  }
+
+  .status-strip > strong {
+    font-size: 9px;
+  }
+
+  .status-strip__album {
+    grid-column: 1 / -1;
+    padding-top: 3px;
+    overflow-wrap: anywhere;
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1.2;
+  }
+
   .metadata-grid,
   .channel-rack {
     grid-template-columns: 1fr;
   }
 
+  .album-library__header {
+    min-height: 38px;
+  }
+
   .album-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: none;
+  }
+
+  .album-mobile-select {
+    display: grid;
+    gap: 7px;
+    padding: 11px;
+    background: var(--panel);
+  }
+
+  .album-mobile-select > span {
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.13em;
   }
 
   .now-playing {

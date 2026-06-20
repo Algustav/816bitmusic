@@ -200,7 +200,9 @@ export default function App() {
               ? "IOS MEDIA"
               : "COMPAT GME"}
         </strong>
-        <span>{metadata ? metadata.title : "SELECT AN ALBUM"}</span>
+        <span className="status-strip__album">
+          {metadata ? metadata.title : "SELECT AN ALBUM"}
+        </span>
         <span className="status-strip__right">
           {engineMode === "realtime" ? snapshot.state.toUpperCase() : "HTTP FALLBACK"}
         </span>
