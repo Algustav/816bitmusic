@@ -191,8 +191,8 @@ export default function App() {
               <strong>{metadata?.trackCount ?? "—"}</strong>
             </div>
             <div>
-              <span>REGION</span>
-              <strong>{metadata?.region ?? "—"}</strong>
+              <span>PUBLISHER</span>
+              <strong>{metadata?.copyright || "—"}</strong>
             </div>
             <div>
               <span>EXPANSION</span>
