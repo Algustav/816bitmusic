@@ -12,6 +12,7 @@
 - NES 五声道主题色适配
 - 自编译 GME / WebAssembly + AudioWorklet 实时播放
 - NSFe 专辑曲目列表与点击即播
+- 构建时读取 `FC_Music_Collection_1_NSFe` 的多栏专辑库
 - 播放、暂停、停止、上一首和下一首
 - 可拖动播放进度条
 - 单曲循环与专辑列表循环
@@ -43,6 +44,10 @@ Output directory: dist
 ```
 
 用户导入的音乐文件只在浏览器本地读取，不会上传服务器。
+
+当前内置专辑通过 Vite 在构建时从 `FC_Music_Collection_1_NSFe/` 收集并输出为
+独立静态资源。部署机器必须在执行 `npm run build` 时拥有该目录；生成后的
+`dist/` 不再依赖源目录。
 
 ## 当前播放限制
 

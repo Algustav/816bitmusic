@@ -2,9 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { applyCssTheme, defaultTheme, getTheme, listThemes } from "../theme-kit/theme.js";
 import { GmeRealtimeEngine, type PlaybackSnapshot } from "./audio/GmeRealtimeEngine";
 import type { NesChannelId } from "./audio/types";
+import { AlbumLibrary } from "./components/AlbumLibrary";
 import { ChannelRack } from "./components/ChannelRack";
-import { FileDropZone } from "./components/FileDropZone";
 import { TrackList } from "./components/TrackList";
+import { albums, type AlbumEntry } from "./library/albumLibrary";
 import { usePlayerStore } from "./store/playerStore";
 import { adaptThemeForPlayer } from "./theme/adaptThemeForPlayer";
 
@@ -32,11 +33,6 @@ function initialThemeId(): string {
   return getTheme(query || localStorage.getItem(STORAGE_KEY) || defaultTheme.id).id;
 }
 
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  return `${(bytes / 1024).toFixed(1)} KB`;
-}
-
 function formatTime(seconds: number): string {
   const safe = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
   const minutes = Math.floor(safe / 60);
@@ -49,9 +45,11 @@ export default function App() {
   const [selectedTrack, setSelectedTrack] = useState(1);
   const [seekPreview, setSeekPreview] = useState<number | null>(null);
   const [loopMode, setLoopMode] = useState<LoopMode>("off");
+  const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
+  const [loadingAlbumId, setLoadingAlbumId] = useState<string | null>(null);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
   const handledEndedRevision = useRef(0);
-  const { metadata, error, loading, muted, setLoadedFile, setLoading, setError, toggleMuted } =
+  const { metadata, error, muted, setLoadedFile, setLoading, setError, toggleMuted } =
     usePlayerStore();
   const theme = useMemo(() => adaptThemeForPlayer(getTheme(themeId)), [themeId]);
 
@@ -87,24 +85,26 @@ export default function App() {
     setThemeId(next.id);
   };
 
-  const inspectFile = async (file: File) => {
-    const maxSize = 16 * 1024 * 1024;
-    if (file.size > maxSize) {
-      setError("文件超过第一阶段 16 MB 的安全限制。");
-      return;
-    }
+  const loadAlbum = async (album: AlbumEntry) => {
+    setLoadingAlbumId(album.id);
     setLoading(true);
+    setError(null);
+    setPlaybackError(null);
     try {
-      const data = await file.arrayBuffer();
-      const nextMetadata = await engine.load(data, file.name);
+      const response = await fetch(album.url);
+      if (!response.ok) throw new Error(`无法载入专辑文件：${response.status}`);
+      const data = await response.arrayBuffer();
+      const nextMetadata = await engine.load(data, album.fileName);
       setLoadedFile(data, nextMetadata);
       setSnapshot(engine.getSnapshot());
       setSelectedTrack(nextMetadata.startingTrack);
       setSeekPreview(null);
       handledEndedRevision.current = 0;
-      setPlaybackError(null);
+      setSelectedAlbumId(album.id);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "无法读取文件。");
+      setError(reason instanceof Error ? reason.message : "无法读取专辑。");
+    } finally {
+      setLoadingAlbumId(null);
     }
   };
 
@@ -193,25 +193,22 @@ export default function App() {
 
       <section className="status-strip">
         <span className="status-dot" />
-        <strong>PHASE 0</strong>
-        <span>NSF ENGINE PROBE</span>
-        <span className="status-strip__right">STATIC HOST READY</span>
+        <strong>REALTIME GME</strong>
+        <span>{metadata ? metadata.title : "SELECT AN ALBUM"}</span>
+        <span className="status-strip__right">{snapshot.state.toUpperCase()}</span>
       </section>
 
       <div className="workspace">
         <section className="theme-panel main-panel">
-          <div className="panel-heading">
-            <div>
-              <span className="section-index">01</span>
-              <h2>文件检查台</h2>
-            </div>
-            <span className="badge">{metadata?.format ?? "NSF / NSFe"}</span>
-          </div>
-
-          <FileDropZone disabled={loading} onFile={inspectFile} />
+          <AlbumLibrary
+            albums={albums}
+            selectedAlbumId={selectedAlbumId}
+            loadingAlbumId={loadingAlbumId}
+            onSelect={(album) => void loadAlbum(album)}
+          />
           {error && <p className="error-message">{error}</p>}
 
-          <div className="metadata-grid">
+          <div className="now-playing">
             <div>
               <span>TITLE</span>
               <strong>{metadata?.title ?? "等待载入"}</strong>
@@ -221,20 +218,12 @@ export default function App() {
               <strong>{metadata?.artist ?? "—"}</strong>
             </div>
             <div>
-              <span>TRACKS</span>
-              <strong>{metadata?.trackCount ?? "—"}</strong>
-            </div>
-            <div>
               <span>PUBLISHER</span>
               <strong>{metadata?.copyright || "—"}</strong>
             </div>
             <div>
-              <span>EXPANSION</span>
-              <strong>{metadata?.expansionAudio.join(", ") || "None / Unknown"}</strong>
-            </div>
-            <div>
-              <span>SIZE</span>
-              <strong>{metadata ? formatBytes(metadata.fileSize) : "—"}</strong>
+              <span>TRACKS</span>
+              <strong>{metadata?.trackCount ?? "—"}</strong>
             </div>
           </div>
 
@@ -314,8 +303,10 @@ export default function App() {
             </div>
           </div>
           {playbackError && <p className="error-message">{playbackError}</p>}
+        </section>
 
-          {metadata && (
+        <aside className="theme-panel track-sidebar">
+          {metadata ? (
             <TrackList
               metadata={metadata}
               selectedTrack={selectedTrack}
@@ -323,44 +314,20 @@ export default function App() {
               disabled={snapshot.state === "rendering"}
               onPlay={(track) => void playTrack(track)}
             />
-          )}
-        </section>
-
-        <aside className="theme-panel diagnostics">
-          <div className="panel-heading">
-            <div>
-              <span className="section-index">03</span>
-              <h2>技术闸门</h2>
+          ) : (
+            <div className="track-sidebar__empty">
+              <span className="section-index">02</span>
+              <strong>Album Tracks</strong>
+              <p>从左侧选择一张专辑，这里会列出全部曲目。</p>
             </div>
-          </div>
-          <ol className="gate-list">
-            <li className={metadata ? "is-passed" : ""}>
-              <span>{metadata ? "PASS" : "WAIT"}</span>
-              NSF / NSFe 文件识别
-            </li>
-            <li className={snapshot.duration > 0 ? "is-passed" : ""}>
-              <span>{snapshot.duration > 0 ? "PASS" : "NEXT"}</span>
-              GME WASM 音频输出
-            </li>
-            <li className={snapshot.duration > 0 ? "is-passed" : ""}>
-              <span>{snapshot.duration > 0 ? "PASS" : "NEXT"}</span>
-              五声道独立 Mute
-            </li>
-            <li>
-              <span>NEXT</span>
-              声道遥测数据
-            </li>
-          </ol>
-          <p className="diagnostic-note">
-            音乐由 AudioWorklet 实时生成，无需预渲染整首曲目。文件不会上传服务器。
-          </p>
+          )}
         </aside>
       </div>
 
       <section className="theme-panel channels-panel">
         <div className="panel-heading">
           <div>
-            <span className="section-index">04</span>
+            <span className="section-index">03</span>
             <h2>NES Channels</h2>
           </div>
           <span className={`badge ${snapshot.duration ? "" : "badge--muted"}`}>
