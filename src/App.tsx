@@ -4,6 +4,7 @@ import { GmeRealtimeEngine, type PlaybackSnapshot } from "./audio/GmeRealtimeEng
 import type { NesChannelId } from "./audio/types";
 import { ChannelRack } from "./components/ChannelRack";
 import { FileDropZone } from "./components/FileDropZone";
+import { TrackList } from "./components/TrackList";
 import { usePlayerStore } from "./store/playerStore";
 import { adaptThemeForPlayer } from "./theme/adaptThemeForPlayer";
 
@@ -91,11 +92,17 @@ export default function App() {
     }
   };
 
-  const selectTrack = async (track: number) => {
-    engine.stop();
+  const playTrack = async (track: number) => {
     setSelectedTrack(track);
-    setSnapshot(engine.getSnapshot());
     setPlaybackError(null);
+    try {
+      if (track === snapshot.track) engine.stop();
+      await engine.play(track);
+      setSnapshot(engine.getSnapshot());
+    } catch (reason) {
+      setPlaybackError(reason instanceof Error ? reason.message : "无法播放该曲目。");
+      setSnapshot(engine.getSnapshot());
+    }
   };
 
   const togglePlayback = async () => {
@@ -105,6 +112,17 @@ export default function App() {
       return;
     }
     await play();
+  };
+
+  const stopPlayback = () => {
+    engine.stop();
+    setSnapshot(engine.getSnapshot());
+  };
+
+  const moveTrack = async (direction: -1 | 1) => {
+    if (!metadata) return;
+    const next = Math.min(metadata.trackCount, Math.max(1, selectedTrack + direction));
+    if (next !== selectedTrack) await playTrack(next);
   };
 
   return (
@@ -179,6 +197,15 @@ export default function App() {
 
           <div className="transport">
             <button
+              className="transport__step"
+              type="button"
+              title="上一首"
+              disabled={!metadata || selectedTrack <= 1 || snapshot.state === "rendering"}
+              onClick={() => void moveTrack(-1)}
+            >
+              ◀
+            </button>
+            <button
               className="transport__main"
               type="button"
               disabled={!metadata || snapshot.state === "rendering"}
@@ -190,23 +217,25 @@ export default function App() {
                   ? "PAUSE"
                   : "PLAY"}
             </button>
-            <label>
-              <span>SUBTRACK</span>
-              <select
-                className="theme-select"
-                disabled={!metadata || snapshot.state === "rendering"}
-                value={selectedTrack}
-                onChange={(event) => void selectTrack(Number(event.target.value))}
-              >
-                {Array.from({ length: metadata?.trackCount ?? 1 }, (_, index) => (
-                  <option key={index + 1} value={index + 1}>
-                    {metadata?.trackTitles[index]
-                      ? `${String(index + 1).padStart(2, "0")} · ${metadata.trackTitles[index]}`
-                      : `Track ${String(index + 1).padStart(2, "0")}`}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <button
+              className="transport__step"
+              type="button"
+              title="下一首"
+              disabled={
+                !metadata || selectedTrack >= metadata.trackCount || snapshot.state === "rendering"
+              }
+              onClick={() => void moveTrack(1)}
+            >
+              ▶
+            </button>
+            <button
+              className="transport__stop"
+              type="button"
+              disabled={!metadata || snapshot.state === "rendering"}
+              onClick={stopPlayback}
+            >
+              STOP
+            </button>
             <div className="transport__time">
               <span>{formatTime(snapshot.currentTime)}</span>
               <i>
@@ -223,12 +252,22 @@ export default function App() {
             </div>
           </div>
           {playbackError && <p className="error-message">{playbackError}</p>}
+
+          {metadata && (
+            <TrackList
+              metadata={metadata}
+              selectedTrack={selectedTrack}
+              snapshot={snapshot}
+              disabled={snapshot.state === "rendering"}
+              onPlay={(track) => void playTrack(track)}
+            />
+          )}
         </section>
 
         <aside className="theme-panel diagnostics">
           <div className="panel-heading">
             <div>
-              <span className="section-index">02</span>
+              <span className="section-index">03</span>
               <h2>技术闸门</h2>
             </div>
           </div>
@@ -259,7 +298,7 @@ export default function App() {
       <section className="theme-panel channels-panel">
         <div className="panel-heading">
           <div>
-            <span className="section-index">03</span>
+            <span className="section-index">04</span>
             <h2>NES Channels</h2>
           </div>
           <span className={`badge ${snapshot.duration ? "" : "badge--muted"}`}>

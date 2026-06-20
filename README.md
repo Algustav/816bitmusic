@@ -11,7 +11,8 @@
 - NSFe 内嵌子曲目标题（`tlbl`）解析
 - NES 五声道主题色适配
 - 自编译 GME / WebAssembly + AudioWorklet 实时播放
-- 子曲目选择、播放与暂停
+- NSFe 专辑曲目列表与点击即播
+- 播放、暂停、停止、上一首和下一首
 - 标准 NES 五声道独立 Mute
 - Cloudflare Pages 静态部署基础配置
 
