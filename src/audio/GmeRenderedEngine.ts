@@ -47,6 +47,8 @@ export class GmeRenderedEngine implements NsfEngine {
   private fileId = "";
   private sources = new Map<string, AudioBufferSourceNode>();
   private gains = new Map<string, GainNode>();
+  private keepAlive: OscillatorNode | null = null;
+  private keepAliveGain: GainNode | null = null;
   private muted = new Map<NesChannelId, boolean>();
   private renderedChannels: Record<string, AudioBuffer> | null = null;
   private currentTrack = 1;
@@ -81,8 +83,11 @@ export class GmeRenderedEngine implements NsfEngine {
       await this.renderTrack(track);
     }
 
-    if (this.state === "paused") {
-      await this.context!.resume();
+    // iOS Safari may suspend the context again while a track is being rendered.
+    // Resume immediately before scheduling sources, not only before the async work.
+    await this.context!.resume();
+    if (this.context!.state !== "running") {
+      throw new Error("Safari 未能启动音频，请再次点击播放。");
     }
     this.startSources(this.offset);
   }
@@ -143,6 +148,7 @@ export class GmeRenderedEngine implements NsfEngine {
 
   dispose(): void {
     this.stop();
+    this.stopKeepAlive();
     this.worker?.terminate();
     this.worker = null;
     void this.context?.close();
@@ -156,6 +162,14 @@ export class GmeRenderedEngine implements NsfEngine {
   private async ensureContext(): Promise<void> {
     this.context ??= new AudioContext({ latencyHint: "interactive" });
     if (this.context.state === "suspended") await this.context.resume();
+    if (!this.keepAlive && this.context.state === "running") {
+      this.keepAlive = this.context.createOscillator();
+      this.keepAliveGain = this.context.createGain();
+      this.keepAlive.frequency.value = 20;
+      this.keepAliveGain.gain.value = 0.000001;
+      this.keepAlive.connect(this.keepAliveGain).connect(this.context.destination);
+      this.keepAlive.start();
+    }
   }
 
   private async renderTrack(track: number): Promise<void> {
@@ -170,11 +184,7 @@ export class GmeRenderedEngine implements NsfEngine {
     const buffers: Record<string, AudioBuffer> = {};
     for (const [name, raw] of Object.entries(result.channels)) {
       const samples = new Int16Array(raw);
-      const audioBuffer = new AudioBuffer({
-        length: samples.length,
-        numberOfChannels: 1,
-        sampleRate: result.sampleRate
-      });
+      const audioBuffer = this.context!.createBuffer(1, samples.length, result.sampleRate);
       const target = audioBuffer.getChannelData(0);
       for (let index = 0; index < samples.length; index += 1) {
         target[index] = samples[index] / 32768;
@@ -249,6 +259,7 @@ export class GmeRenderedEngine implements NsfEngine {
       };
     }
     this.state = "playing";
+    this.stopKeepAlive();
   }
 
   private stopSources(): void {
@@ -264,5 +275,19 @@ export class GmeRenderedEngine implements NsfEngine {
     for (const gain of this.gains.values()) gain.disconnect();
     this.sources.clear();
     this.gains.clear();
+  }
+
+  private stopKeepAlive(): void {
+    if (this.keepAlive) {
+      try {
+        this.keepAlive.stop();
+      } catch {
+        // The keep-alive oscillator may already have stopped.
+      }
+      this.keepAlive.disconnect();
+      this.keepAlive = null;
+    }
+    this.keepAliveGain?.disconnect();
+    this.keepAliveGain = null;
   }
 }

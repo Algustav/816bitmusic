@@ -54,6 +54,9 @@ AudioWorklet 要求安全上下文。`localhost` 和 HTTPS 使用实时引擎；
 `http://局域网IP:端口` 访问时自动使用预渲染兼容引擎，页面会显示
 `COMPAT GME / HTTP FALLBACK`。正式部署到 Cloudflare Pages 后会恢复实时引擎。
 
+iOS Safari 的兼容引擎使用 `AudioContext.createBuffer()`，并在预渲染期间保持
+音频会话激活；真正调度音源前会再次确认 AudioContext 已进入运行状态。
+
 ## 当前播放限制
 
 - 经典 NSF 通常不含子曲目标题；没有 `.m3u` 等外部曲目表时只能显示编号。
