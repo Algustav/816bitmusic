@@ -17,11 +17,12 @@ class GmeRealtimeProcessor extends AudioWorkletProcessor {
     this.currentTrack = 0;
     this.progressCounter = 0;
     this.generation = 0;
-    this.port.onmessage = (event) => void this.handleMessage(event.data);
+    this.port.onmessage = (event) => this.handleMessage(event.data);
   }
 
-  async ensureWasm(wasmModule) {
+  ensureWasm(wasmBytes) {
     if (this.exports) return;
+    this.port.postMessage({ type: "status", stage: "wasm" });
     const imports = {
       env: {
         emscripten_notify_memory_growth() {}
@@ -38,19 +39,21 @@ class GmeRealtimeProcessor extends AudioWorkletProcessor {
         }
       }
     };
-    if (!wasmModule) throw new Error("缺少实时 GME WASM 模块。");
-    const instance = await WebAssembly.instantiate(wasmModule, imports);
+    if (!wasmBytes) throw new Error("缺少实时 GME WASM 数据。");
+    const module = new WebAssembly.Module(wasmBytes);
+    const instance = new WebAssembly.Instance(module, imports);
     this.exports = instance.exports;
     this.exports._initialize();
   }
 
-  async load(data) {
+  load(data) {
     const generation = ++this.generation;
     this.playing = false;
     this.ready = false;
-    await this.ensureWasm(data.wasmModule);
+    this.ensureWasm(data.wasmBytes);
     if (generation !== this.generation) return;
 
+    this.port.postMessage({ type: "status", stage: "file" });
     const file = new Uint8Array(data.fileData);
     const pointer = this.exports.malloc(file.byteLength);
     new Uint8Array(this.exports.memory.buffer, pointer, file.byteLength).set(file);
@@ -58,6 +61,7 @@ class GmeRealtimeProcessor extends AudioWorkletProcessor {
     this.exports.free(pointer);
     if (!loaded) throw new Error("GME 无法打开该文件。");
 
+    this.port.postMessage({ type: "status", stage: "track" });
     this.currentTrack = data.track;
     if (!this.exports.chip_start_track(this.currentTrack)) {
       throw new Error("GME 无法启动该子曲目。");
@@ -99,10 +103,10 @@ class GmeRealtimeProcessor extends AudioWorkletProcessor {
     }
   }
 
-  async handleMessage(data) {
+  handleMessage(data) {
     try {
       if (data.type === "load") {
-        await this.load(data);
+        this.load(data);
       } else if (data.type === "track") {
         this.startTrack(data);
       } else if (data.type === "play") {
@@ -123,7 +127,7 @@ class GmeRealtimeProcessor extends AudioWorkletProcessor {
       this.playing = false;
       this.port.postMessage({
         type: "error",
-        message: error instanceof Error ? error.message : String(error)
+        message: `AudioWorklet 初始化失败：${error instanceof Error ? error.message : String(error)}`
       });
     }
   }

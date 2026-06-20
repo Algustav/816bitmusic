@@ -24,6 +24,7 @@ type ProcessorMessage =
       fadeMs: number;
     }
   | { type: "state"; state: PlaybackSnapshot["state"] }
+  | { type: "status"; stage: "wasm" | "file" | "track" }
   | { type: "progress"; currentTimeMs: number; ended: boolean; rms: number }
   | { type: "error"; message: string };
 
@@ -36,7 +37,7 @@ export class GmeRealtimeEngine implements NsfEngine {
   private fileData: ArrayBuffer | null = null;
   private fileGeneration = 0;
   private loadedGeneration = -1;
-  private wasmModule: WebAssembly.Module | null = null;
+  private wasmBytes: ArrayBuffer | null = null;
   private currentTrack = 1;
   private duration = 0;
   private currentTime = 0;
@@ -77,21 +78,27 @@ export class GmeRealtimeEngine implements NsfEngine {
       this.currentTime = 0;
       this.duration = this.durationForTrack(track);
       const fileData = this.fileData.slice(0);
-      const wasmModule = await this.ensureWasmModule();
+      const wasmBytes = (await this.ensureWasmBytes()).slice(0);
       const ready = this.waitForReady();
-      this.node!.port.postMessage(
-        {
+      try {
+        this.node!.port.postMessage(
+          {
           type: "load",
-          wasmModule,
+          wasmBytes,
           fileData,
           track: track - 1,
           durationMs: this.trackTime(track),
           fadeMs: this.trackFade(track),
           muted: Object.fromEntries(CHANNELS.map((channel) => [channel, this.muted.get(channel) ?? false])),
           autoplay: true
-        },
-        [fileData]
-      );
+          },
+          [wasmBytes, fileData]
+        );
+      } catch (reason) {
+        const error = reason instanceof Error ? reason : new Error(String(reason));
+        this.failReady(error);
+        throw error;
+      }
       await ready;
       this.loadedGeneration = this.fileGeneration;
     } else if (track !== this.currentTrack) {
@@ -173,43 +180,56 @@ export class GmeRealtimeEngine implements NsfEngine {
         this.readyWaiter = null;
       } else if (message.type === "state") {
         this.state = message.state;
+      } else if (message.type === "status") {
+        this.state = "rendering";
       } else if (message.type === "progress") {
         this.currentTime = message.currentTimeMs / 1000;
         this.rms = message.rms;
         if (message.ended) this.state = "ready";
       } else if (message.type === "error") {
-        this.lastError = new Error(message.message);
-        this.state = "ready";
-        this.readyWaiter?.reject(this.lastError);
-        this.readyWaiter = null;
+        this.failReady(new Error(message.message));
       }
     };
     this.node.onprocessorerror = () => {
       const error = new Error("AudioWorklet 处理器异常终止。");
-      this.lastError = error;
-      this.state = "ready";
-      this.readyWaiter?.reject(error);
-      this.readyWaiter = null;
+      this.failReady(error);
     };
     this.node.connect(this.context.destination);
   }
 
-  private async ensureWasmModule(): Promise<WebAssembly.Module> {
-    if (this.wasmModule) return this.wasmModule;
+  private async ensureWasmBytes(): Promise<ArrayBuffer> {
+    if (this.wasmBytes) return this.wasmBytes;
     const response = await fetch("/vendor/gme-realtime/realtime-gme.wasm");
     if (!response.ok) throw new Error(`无法加载实时 GME WASM：${response.status}`);
-    try {
-      this.wasmModule = await WebAssembly.compileStreaming(response.clone());
-    } catch {
-      this.wasmModule = await WebAssembly.compile(await response.arrayBuffer());
-    }
-    return this.wasmModule;
+    this.wasmBytes = await response.arrayBuffer();
+    return this.wasmBytes;
   }
 
   private waitForReady(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.readyWaiter = { resolve, reject };
+      const timeout = window.setTimeout(() => {
+        if (!this.readyWaiter) return;
+        this.failReady(new Error("实时音频内核初始化超时，请刷新页面后重试。"));
+      }, 8_000);
+      this.readyWaiter = {
+        resolve: () => {
+          window.clearTimeout(timeout);
+          resolve();
+        },
+        reject: (error) => {
+          window.clearTimeout(timeout);
+          reject(error);
+        }
+      };
     });
+  }
+
+  private failReady(error: Error): void {
+    this.lastError = error;
+    this.state = "ready";
+    const waiter = this.readyWaiter;
+    this.readyWaiter = null;
+    waiter?.reject(error);
   }
 
   private trackTime(track: number): number {
