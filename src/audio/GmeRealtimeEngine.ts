@@ -12,6 +12,7 @@ export interface PlaybackSnapshot {
   duration: number;
   currentTime: number;
   durationWasEstimated: boolean;
+  endedRevision: number;
 }
 
 type ProcessorMessage =
@@ -43,6 +44,7 @@ export class GmeRealtimeEngine implements NsfEngine {
   private currentTime = 0;
   private rms = 0;
   private state: PlaybackSnapshot["state"] = "empty";
+  private endedRevision = 0;
   private muted = new Map<NesChannelId, boolean>();
   private readyWaiter: {
     resolve: () => void;
@@ -59,6 +61,7 @@ export class GmeRealtimeEngine implements NsfEngine {
     this.currentTrack = this.metadata.startingTrack;
     this.currentTime = 0;
     this.duration = this.durationForTrack(this.currentTrack);
+    this.endedRevision = 0;
     this.lastError = null;
     this.state = "ready";
     return this.metadata;
@@ -155,7 +158,8 @@ export class GmeRealtimeEngine implements NsfEngine {
       track: this.currentTrack,
       duration: this.duration,
       currentTime: this.currentTime,
-      durationWasEstimated: this.duration === 0
+      durationWasEstimated: this.duration === 0,
+      endedRevision: this.endedRevision
     };
   }
 
@@ -192,7 +196,10 @@ export class GmeRealtimeEngine implements NsfEngine {
       } else if (message.type === "progress") {
         this.currentTime = message.currentTimeMs / 1000;
         this.rms = message.rms;
-        if (message.ended) this.state = "ready";
+        if (message.ended) {
+          this.state = "ready";
+          this.endedRevision += 1;
+        }
       } else if (message.type === "error") {
         this.failReady(new Error(message.message));
       }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { applyCssTheme, defaultTheme, getTheme, listThemes } from "../theme-kit/theme.js";
 import { GmeRealtimeEngine, type PlaybackSnapshot } from "./audio/GmeRealtimeEngine";
 import type { NesChannelId } from "./audio/types";
@@ -15,7 +15,16 @@ const EMPTY_SNAPSHOT: PlaybackSnapshot = {
   track: 1,
   duration: 0,
   currentTime: 0,
-  durationWasEstimated: false
+  durationWasEstimated: false,
+  endedRevision: 0
+};
+
+type LoopMode = "off" | "one" | "all";
+
+const LOOP_MODE_LABELS: Record<LoopMode, string> = {
+  off: "LOOP OFF",
+  one: "LOOP ONE",
+  all: "LOOP ALL"
 };
 
 function initialThemeId(): string {
@@ -39,7 +48,9 @@ export default function App() {
   const [snapshot, setSnapshot] = useState<PlaybackSnapshot>(EMPTY_SNAPSHOT);
   const [selectedTrack, setSelectedTrack] = useState(1);
   const [seekPreview, setSeekPreview] = useState<number | null>(null);
+  const [loopMode, setLoopMode] = useState<LoopMode>("off");
   const [playbackError, setPlaybackError] = useState<string | null>(null);
+  const handledEndedRevision = useRef(0);
   const { metadata, error, loading, muted, setLoadedFile, setLoading, setError, toggleMuted } =
     usePlayerStore();
   const theme = useMemo(() => adaptThemeForPlayer(getTheme(themeId)), [themeId]);
@@ -48,6 +59,24 @@ export default function App() {
     const timer = window.setInterval(() => setSnapshot(engine.getSnapshot()), 150);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!metadata || snapshot.endedRevision <= handledEndedRevision.current) return;
+    handledEndedRevision.current = snapshot.endedRevision;
+
+    if (loopMode === "one") {
+      engine.stop();
+      void engine.play(selectedTrack).catch((reason) => {
+        setPlaybackError(reason instanceof Error ? reason.message : "单曲循环失败。");
+      });
+    } else if (loopMode === "all") {
+      const nextTrack = selectedTrack >= metadata.trackCount ? 1 : selectedTrack + 1;
+      setSelectedTrack(nextTrack);
+      void engine.play(nextTrack).catch((reason) => {
+        setPlaybackError(reason instanceof Error ? reason.message : "列表循环失败。");
+      });
+    }
+  }, [loopMode, metadata, selectedTrack, snapshot.endedRevision]);
 
   const selectTheme = (id: string) => {
     const next = getTheme(id);
@@ -72,6 +101,7 @@ export default function App() {
       setSnapshot(engine.getSnapshot());
       setSelectedTrack(nextMetadata.startingTrack);
       setSeekPreview(null);
+      handledEndedRevision.current = 0;
       setPlaybackError(null);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "无法读取文件。");
@@ -132,6 +162,10 @@ export default function App() {
     engine.seek(seconds);
     setSeekPreview(null);
     setSnapshot(engine.getSnapshot());
+  };
+
+  const cycleLoopMode = () => {
+    setLoopMode((current) => (current === "off" ? "one" : current === "one" ? "all" : "off"));
   };
 
   return (
@@ -244,6 +278,15 @@ export default function App() {
               onClick={stopPlayback}
             >
               STOP
+            </button>
+            <button
+              className={`transport__loop ${loopMode !== "off" ? "is-active" : ""}`}
+              type="button"
+              title="切换循环模式"
+              aria-label={`循环模式：${LOOP_MODE_LABELS[loopMode]}`}
+              onClick={cycleLoopMode}
+            >
+              {LOOP_MODE_LABELS[loopMode]}
             </button>
             <div className="transport__time">
               <span>{formatTime(seekPreview ?? snapshot.currentTime)}</span>
