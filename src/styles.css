@@ -89,6 +89,11 @@ button:disabled {
   margin-left: auto;
 }
 
+.mobile-layout-toggle,
+.mobile-theme-footer {
+  display: none;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(0, 1.65fr) minmax(330px, 0.75fr);
@@ -861,8 +866,8 @@ button:disabled {
     flex-direction: column;
   }
 
-  .theme-picker {
-    width: 100%;
+  .app-header > .theme-picker {
+    display: none;
   }
 
   .status-strip__right {
@@ -892,6 +897,25 @@ button:disabled {
     font-weight: 800;
     letter-spacing: 0;
     line-height: 1.2;
+  }
+
+  .mobile-layout-toggle {
+    width: 100%;
+    min-height: 34px;
+    display: block;
+    margin: 0 0 10px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    background: var(--panel);
+    font-family: ui-monospace, monospace;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+  }
+
+  .mobile-layout-toggle[aria-pressed="true"] {
+    border-color: var(--accent);
+    color: var(--accent);
   }
 
   .metadata-grid,
@@ -945,5 +969,183 @@ button:disabled {
 
   .transport__time {
     grid-column: 1 / -1;
+  }
+
+  .mobile-theme-footer {
+    display: block;
+    margin-top: 12px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+  }
+
+  .mobile-theme-footer .theme-picker {
+    width: 100%;
+  }
+
+  .is-mobile-compact {
+    width: min(100% - 12px, 1240px);
+    padding-top: 6px;
+  }
+
+  .is-mobile-compact .app-header {
+    min-height: 48px;
+    padding: 4px 2px 7px;
+  }
+
+  .is-mobile-compact .kicker {
+    display: none;
+  }
+
+  .is-mobile-compact .app-header h1 {
+    margin: 0;
+    font-size: 34px;
+    line-height: 1;
+  }
+
+  .is-mobile-compact .status-strip {
+    display: flex;
+    min-height: 34px;
+    padding: 6px 9px;
+  }
+
+  .is-mobile-compact .status-strip__album {
+    grid-column: auto;
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .is-mobile-compact .mobile-layout-toggle {
+    min-height: 30px;
+    margin-bottom: 6px;
+  }
+
+  .is-mobile-compact .main-panel,
+  .is-mobile-compact .track-sidebar {
+    padding: 7px;
+  }
+
+  .is-mobile-compact .album-library__header {
+    display: none;
+  }
+
+  .is-mobile-compact .album-mobile-select {
+    grid-template-columns: 78px minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+    padding: 7px;
+  }
+
+  .is-mobile-compact .now-playing {
+    grid-template-columns: 1fr 1fr;
+    margin-top: 6px;
+  }
+
+  .is-mobile-compact .now-playing > div {
+    min-height: 42px;
+    padding: 6px 8px;
+  }
+
+  .is-mobile-compact .now-playing > div:nth-child(3),
+  .is-mobile-compact .now-playing > div:nth-child(4) {
+    display: none;
+  }
+
+  .is-mobile-compact .oscilloscope {
+    margin-top: 6px;
+  }
+
+  .is-mobile-compact .oscilloscope__header {
+    min-height: 28px;
+  }
+
+  .is-mobile-compact .oscilloscope canvas {
+    height: 72px;
+  }
+
+  .is-mobile-compact .channel-rack {
+    grid-template-columns: 1fr;
+    gap: 3px;
+    margin-top: 6px;
+  }
+
+  .is-mobile-compact .channel:nth-child(n) {
+    min-height: 34px;
+    grid-column: 1;
+    grid-template-columns: 72px minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+    padding: 5px 7px;
+    border-left: 2px solid var(--line);
+  }
+
+  .is-mobile-compact .channel > div:first-of-type {
+    grid-column: 1;
+  }
+
+  .is-mobile-compact .channel small {
+    display: none;
+  }
+
+  .is-mobile-compact .channel__lcd-row {
+    grid-column: 2;
+    margin: 0;
+  }
+
+  .is-mobile-compact .channel__lcd {
+    height: 22px;
+    padding: 3px;
+  }
+
+  .is-mobile-compact .channel__lcd i {
+    height: 12px;
+  }
+
+  .is-mobile-compact .transport {
+    grid-template-columns: 38px minmax(0, 1fr) 38px;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 7px;
+  }
+
+  .is-mobile-compact .transport__main,
+  .is-mobile-compact .transport__step,
+  .is-mobile-compact .transport__stop,
+  .is-mobile-compact .transport__loop,
+  .is-mobile-compact .transport__auto {
+    min-height: 36px;
+  }
+
+  .is-mobile-compact .transport__stop,
+  .is-mobile-compact .transport__loop,
+  .is-mobile-compact .transport__auto {
+    grid-column: span 1;
+  }
+
+  .is-mobile-compact .transport__time {
+    min-height: 30px;
+    grid-column: 1 / -1;
+  }
+
+  .is-mobile-compact .track-sidebar {
+    margin-top: 7px;
+  }
+
+  .is-mobile-compact .track-list-panel__header {
+    min-height: 38px;
+  }
+
+  .is-mobile-compact .track-row {
+    min-height: 40px;
+    padding: 0 9px;
+  }
+
+  .is-mobile-compact .mobile-theme-footer {
+    margin-top: 7px;
+    padding: 8px;
   }
 }

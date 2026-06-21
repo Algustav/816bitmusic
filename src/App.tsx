@@ -55,6 +55,7 @@ export default function App() {
   const [seekPreview, setSeekPreview] = useState<number | null>(null);
   const [loopMode, setLoopMode] = useState<LoopMode>("all");
   const [autoPlay, setAutoPlay] = useState(true);
+  const [mobileCompact, setMobileCompact] = useState(false);
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
   const [loadingAlbumId, setLoadingAlbumId] = useState<string | null>(null);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
@@ -183,7 +184,7 @@ export default function App() {
   };
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell ${mobileCompact ? "is-mobile-compact" : ""}`}>
       <header className="app-header">
         <div>
           <span className="kicker">CHIP MUSIC VISUAL LAB</span>
@@ -221,6 +222,15 @@ export default function App() {
           {engineMode === "realtime" ? snapshot.state.toUpperCase() : "HTTP FALLBACK"}
         </span>
       </section>
+
+      <button
+        className="mobile-layout-toggle"
+        type="button"
+        aria-pressed={mobileCompact}
+        onClick={() => setMobileCompact((compact) => !compact)}
+      >
+        MOBILE VIEW · {mobileCompact ? "COMPACT" : "ADAPTIVE"}
+      </button>
 
       <div className="workspace">
         <section className="theme-panel main-panel">
@@ -366,6 +376,23 @@ export default function App() {
           )}
         </aside>
       </div>
+
+      <footer className="mobile-theme-footer">
+        <label className="theme-picker">
+          <span>THEME</span>
+          <select
+            className="theme-select"
+            value={themeId}
+            onChange={(event) => selectTheme(event.target.value)}
+          >
+            {listThemes().map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      </footer>
     </main>
   );
 }
