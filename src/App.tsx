@@ -512,9 +512,8 @@ export default function App() {
                 <span>{favorites.length} SAVED</span>
               </header>
               <div className="track-sidebar__empty">
-                <span className="section-index">02</span>
                 <strong>Album Tracks</strong>
-                <p>从左侧选择一张专辑，这里会列出全部曲目。</p>
+                <p>请选择专辑，这里会列出全部曲目</p>
               </div>
             </section>
           )}
