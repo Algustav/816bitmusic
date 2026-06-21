@@ -160,6 +160,7 @@ button:disabled {
 .app-shell.is-retro-font .app-brand__mobile-subtitle,
 .app-shell.is-retro-font .section-index,
 .app-shell.is-retro-font .theme-picker > span,
+.app-shell.is-retro-font .album-mobile-select > span,
 .app-shell.is-retro-font .album-library__header h2,
 .app-shell.is-retro-font .track-view-tabs button {
   font-family: "Silkscreen", "Microsoft YaHei", "PingFang SC", sans-serif;
@@ -171,7 +172,8 @@ button:disabled {
 
 .app-shell.is-retro-font .track-view-tabs button,
 .app-shell.is-retro-font .oscilloscope__header .section-index,
-.app-shell.is-retro-font .theme-picker > span {
+.app-shell.is-retro-font .theme-picker > span,
+.app-shell.is-retro-font .album-mobile-select > span {
   font-size: 13px;
   font-weight: 400;
   letter-spacing: 0.08em;
@@ -1135,9 +1137,6 @@ button:disabled {
 
   .album-mobile-select > span {
     color: var(--muted);
-    font-size: 9px;
-    font-weight: 900;
-    letter-spacing: 0.13em;
   }
 
   .now-playing {
