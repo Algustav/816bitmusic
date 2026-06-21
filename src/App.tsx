@@ -5,6 +5,7 @@ import { engineMode, playerEngine as engine } from "./audio/playerEngine";
 import type { NesChannelId } from "./audio/types";
 import { AlbumLibrary } from "./components/AlbumLibrary";
 import { ChannelRack } from "./components/ChannelRack";
+import { CrtOscilloscope } from "./components/CrtOscilloscope";
 import { TrackList } from "./components/TrackList";
 import { albums, type AlbumEntry } from "./library/albumLibrary";
 import { usePlayerStore } from "./store/playerStore";
@@ -17,7 +18,8 @@ const EMPTY_SNAPSHOT: PlaybackSnapshot = {
   duration: 0,
   currentTime: 0,
   durationWasEstimated: false,
-  endedRevision: 0
+  endedRevision: 0,
+  waveform: new Float32Array(128)
 };
 
 type LoopMode = "off" | "one" | "all";
@@ -241,6 +243,8 @@ export default function App() {
               <strong>{metadata?.trackCount ?? "—"}</strong>
             </div>
           </div>
+
+          <CrtOscilloscope snapshot={snapshot} theme={theme} />
 
           <div className="transport">
             <button

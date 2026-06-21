@@ -16,6 +16,7 @@ class GmeRealtimeProcessor extends AudioWorkletProcessor {
     this.ready = false;
     this.currentTrack = 0;
     this.progressCounter = 0;
+    this.waveformCounter = 0;
     this.generation = 0;
     this.port.onmessage = (event) => this.handleMessage(event.data);
   }
@@ -175,6 +176,14 @@ class GmeRealtimeProcessor extends AudioWorkletProcessor {
       left[frame] = leftValue;
       right[frame] = rightValue;
       squareSum += leftValue * leftValue + rightValue * rightValue;
+    }
+
+    this.waveformCounter += 1;
+    if (this.waveformCounter >= 12) {
+      this.waveformCounter = 0;
+      const waveform = new Float32Array(left.length);
+      waveform.set(left);
+      this.port.postMessage({ type: "waveform", samples: waveform }, [waveform.buffer]);
     }
 
     this.progressCounter += 1;

@@ -13,6 +13,7 @@ export interface PlaybackSnapshot {
   currentTime: number;
   durationWasEstimated: boolean;
   endedRevision: number;
+  waveform: Float32Array;
 }
 
 type ProcessorMessage =
@@ -27,6 +28,7 @@ type ProcessorMessage =
   | { type: "state"; state: PlaybackSnapshot["state"] }
   | { type: "status"; stage: "wasm" | "file" | "track" }
   | { type: "progress"; currentTimeMs: number; ended: boolean; rms: number }
+  | { type: "waveform"; samples: Float32Array }
   | { type: "error"; message: string };
 
 const CHANNELS: NesChannelId[] = ["pulse1", "pulse2", "triangle", "noise", "dpcm"];
@@ -45,6 +47,7 @@ export class GmeRealtimeEngine implements NsfEngine {
   private rms = 0;
   private state: PlaybackSnapshot["state"] = "empty";
   private endedRevision = 0;
+  private waveform = new Float32Array(128);
   private muted = new Map<NesChannelId, boolean>();
   private readyWaiter: {
     resolve: () => void;
@@ -159,7 +162,8 @@ export class GmeRealtimeEngine implements NsfEngine {
       duration: this.duration,
       currentTime: this.currentTime,
       durationWasEstimated: this.duration === 0,
-      endedRevision: this.endedRevision
+      endedRevision: this.endedRevision,
+      waveform: this.waveform
     };
   }
 
@@ -200,6 +204,8 @@ export class GmeRealtimeEngine implements NsfEngine {
           this.state = "ready";
           this.endedRevision += 1;
         }
+      } else if (message.type === "waveform") {
+        this.waveform = message.samples;
       } else if (message.type === "error") {
         this.failReady(new Error(message.message));
       }

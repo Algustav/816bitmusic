@@ -17,6 +17,7 @@
 - 可拖动播放进度条
 - 单曲循环与专辑列表循环
 - 局域网 HTTP 自动回退至兼容播放引擎
+- Theme Kit 驱动的实时 CRT 混合音频示波器
 - 标准 NES 五声道独立 Mute
 - Cloudflare Pages 静态部署基础配置
 

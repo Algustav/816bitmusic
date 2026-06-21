@@ -237,6 +237,51 @@ button:disabled {
   white-space: nowrap;
 }
 
+.oscilloscope {
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--board-shell);
+}
+
+.oscilloscope__header {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel-2);
+}
+
+.oscilloscope__header > div {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.oscilloscope__header h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.oscilloscope__header > span {
+  color: var(--accent);
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.oscilloscope canvas {
+  width: 100%;
+  height: 126px;
+  display: block;
+}
+
 .panel-heading {
   display: flex;
   align-items: center;
@@ -816,6 +861,10 @@ button:disabled {
 
   .now-playing {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .oscilloscope canvas {
+    height: 104px;
   }
 
   .transport {

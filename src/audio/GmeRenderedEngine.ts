@@ -37,6 +37,7 @@ export interface PlaybackSnapshot {
   currentTime: number;
   durationWasEstimated: boolean;
   endedRevision: number;
+  waveform: Float32Array;
 }
 
 export class GmeRenderedEngine implements NsfEngine {
@@ -57,6 +58,7 @@ export class GmeRenderedEngine implements NsfEngine {
   private offset = 0;
   private state: PlaybackSnapshot["state"] = "empty";
   private endedRevision = 0;
+  private readonly waveform = new Float32Array(128);
   private durationWasEstimated = false;
   private renderToken = 0;
 
@@ -142,7 +144,8 @@ export class GmeRenderedEngine implements NsfEngine {
       duration: this.duration,
       currentTime,
       durationWasEstimated: this.durationWasEstimated,
-      endedRevision: this.endedRevision
+      endedRevision: this.endedRevision,
+      waveform: this.waveform
     };
   }
 

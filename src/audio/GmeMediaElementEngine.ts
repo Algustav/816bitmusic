@@ -70,6 +70,7 @@ export class GmeMediaElementEngine implements NsfEngine {
   private state: PlaybackSnapshot["state"] = "empty";
   private duration = 0;
   private endedRevision = 0;
+  private readonly waveform = new Float32Array(128);
   private objectUrl: string | null = null;
   private unlocked = false;
 
@@ -161,7 +162,8 @@ export class GmeMediaElementEngine implements NsfEngine {
       duration: mediaDuration || this.duration,
       currentTime: Number.isFinite(this.audio.currentTime) ? this.audio.currentTime : 0,
       durationWasEstimated: false,
-      endedRevision: this.endedRevision
+      endedRevision: this.endedRevision,
+      waveform: this.waveform
     };
   }
 

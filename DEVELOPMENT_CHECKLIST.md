@@ -152,7 +152,7 @@ interface NesChannelTelemetry {
 ### 阶段 4：基础可视化
 
 - [ ] 使用 AnalyserNode 获取总输出波形
-- [ ] 实现整体示波器
+- [x] 实现整体示波器
 - [ ] 实现整体频谱
 - [ ] 为五个声道制作独立音量表
 - [ ] Pulse 通道根据频率和占空比绘制方波
