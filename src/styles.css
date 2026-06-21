@@ -337,7 +337,7 @@ button:disabled {
 
 .transport {
   display: grid;
-  grid-template-columns: 42px 116px 42px 64px 86px minmax(240px, 1fr);
+  grid-template-columns: 42px 116px 42px 64px 86px 78px minmax(220px, 1fr);
   gap: 8px;
   align-items: end;
   margin-top: 10px;
@@ -358,7 +358,8 @@ button:disabled {
 
 .transport__step,
 .transport__stop,
-.transport__loop {
+.transport__loop,
+.transport__auto {
   min-height: 42px;
   border: 1px solid var(--line);
   color: var(--text);
@@ -370,12 +371,14 @@ button:disabled {
 
 .transport__step:not(:disabled):hover,
 .transport__stop:not(:disabled):hover,
-.transport__loop:not(:disabled):hover {
+.transport__loop:not(:disabled):hover,
+.transport__auto:not(:disabled):hover {
   border-color: var(--accent);
   color: var(--accent);
 }
 
-.transport__loop.is-active {
+.transport__loop.is-active,
+.transport__auto.is-active {
   border-color: var(--accent);
   color: var(--accent);
   background: color-mix(in srgb, var(--accent), var(--touch-bg) 88%);
@@ -732,7 +735,7 @@ button:disabled {
   }
 
   .transport {
-    grid-template-columns: 42px 1fr 42px 64px 86px;
+    grid-template-columns: 42px 1fr 42px 64px 86px 78px;
   }
 
   .transport__time {
@@ -820,7 +823,8 @@ button:disabled {
   }
 
   .transport__stop,
-  .transport__loop {
+  .transport__loop,
+  .transport__auto {
     grid-column: span 1;
   }
 

@@ -45,6 +45,7 @@ export default function App() {
   const [selectedTrack, setSelectedTrack] = useState(1);
   const [seekPreview, setSeekPreview] = useState<number | null>(null);
   const [loopMode, setLoopMode] = useState<LoopMode>("off");
+  const [autoPlay, setAutoPlay] = useState(false);
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
   const [loadingAlbumId, setLoadingAlbumId] = useState<string | null>(null);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
@@ -101,6 +102,10 @@ export default function App() {
       setSeekPreview(null);
       handledEndedRevision.current = 0;
       setSelectedAlbumId(album.id);
+      if (autoPlay) {
+        await engine.play(nextMetadata.startingTrack);
+        setSnapshot(engine.getSnapshot());
+      }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "无法读取专辑。");
     } finally {
@@ -286,6 +291,15 @@ export default function App() {
               onClick={cycleLoopMode}
             >
               {LOOP_MODE_LABELS[loopMode]}
+            </button>
+            <button
+              className={`transport__auto ${autoPlay ? "is-active" : ""}`}
+              type="button"
+              title="选择专辑后自动播放第一首"
+              aria-pressed={autoPlay}
+              onClick={() => setAutoPlay((enabled) => !enabled)}
+            >
+              AUTO {autoPlay ? "ON" : "OFF"}
             </button>
             <div className="transport__time">
               <span>{formatTime(seekPreview ?? snapshot.currentTime)}</span>
