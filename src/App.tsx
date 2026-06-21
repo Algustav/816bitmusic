@@ -48,6 +48,10 @@ function initialThemeId(): string {
   return getTheme(query || localStorage.getItem(STORAGE_KEY) || defaultTheme.id).id;
 }
 
+function initialMobileCompact(): boolean {
+  return window.matchMedia("(max-width: 560px)").matches;
+}
+
 function formatTime(seconds: number): string {
   const safe = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
   const minutes = Math.floor(safe / 60);
@@ -64,7 +68,7 @@ export default function App() {
   const [trackView, setTrackView] = useState<"album" | "favorites">("album");
   const [favorites, setFavorites] = useState(loadFavorites);
   const [favoriteMetadata, setFavoriteMetadata] = useState<Record<string, NsfMetadata>>({});
-  const [mobileCompact, setMobileCompact] = useState(false);
+  const [mobileCompact, setMobileCompact] = useState(initialMobileCompact);
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
   const [loadingAlbumId, setLoadingAlbumId] = useState<string | null>(null);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
@@ -273,9 +277,12 @@ export default function App() {
   return (
     <main className={`app-shell ${mobileCompact ? "is-mobile-compact" : ""}`}>
       <header className="app-header">
-        <div>
+        <div className="app-brand">
           <span className="kicker">CHIP MUSIC VISUAL LAB</span>
-          <h1>8<span>+</span>16bit</h1>
+          <div className="app-brand__line">
+            <h1>8<span>+</span>16 bit</h1>
+            <span className="app-brand__mobile-subtitle">CHIP Music VISUAL LAB</span>
+          </div>
         </div>
         <label className="theme-picker">
           <span>THEME</span>
@@ -321,19 +328,19 @@ export default function App() {
           {error && <p className="error-message">{error}</p>}
 
           <div className="now-playing">
-            <div>
+            <div className="now-playing__title">
               <span>TITLE</span>
               <strong>{metadata?.title ?? "等待载入"}</strong>
             </div>
-            <div>
+            <div className="now-playing__artist">
               <span>ARTIST</span>
               <strong>{metadata?.artist ?? "—"}</strong>
             </div>
-            <div>
+            <div className="now-playing__publisher">
               <span>PUBLISHER</span>
               <strong>{metadata?.copyright || "—"}</strong>
             </div>
-            <div>
+            <div className="now-playing__tracks">
               <span>TRACKS</span>
               <strong>{metadata?.trackCount ?? "—"}</strong>
             </div>

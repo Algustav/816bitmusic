@@ -89,6 +89,15 @@ button:disabled {
   margin-left: auto;
 }
 
+.app-brand__line {
+  display: flex;
+  align-items: baseline;
+}
+
+.app-brand__mobile-subtitle {
+  display: none;
+}
+
 .mobile-layout-toggle,
 .mobile-theme-footer {
   display: none;
@@ -1008,6 +1017,25 @@ button:disabled {
     display: none;
   }
 
+  .kicker {
+    display: none;
+  }
+
+  .app-brand__line {
+    align-items: flex-end;
+    gap: 10px;
+  }
+
+  .app-brand__mobile-subtitle {
+    display: block;
+    padding-bottom: 2px;
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    line-height: 1.15;
+  }
+
   .status-strip__right {
     display: none;
   }
@@ -1110,10 +1138,6 @@ button:disabled {
     padding: 4px 2px 7px;
   }
 
-  .is-mobile-compact .kicker {
-    display: none;
-  }
-
   .is-mobile-compact .app-header h1 {
     margin: 0;
     font-size: 34px;
@@ -1151,9 +1175,17 @@ button:disabled {
     padding: 6px 8px;
   }
 
-  .is-mobile-compact .now-playing > div:nth-child(3),
-  .is-mobile-compact .now-playing > div:nth-child(4) {
+  .is-mobile-compact .now-playing__title,
+  .is-mobile-compact .now-playing__tracks {
     display: none;
+  }
+
+  .is-mobile-compact .now-playing__publisher {
+    order: 1;
+  }
+
+  .is-mobile-compact .now-playing__artist {
+    order: 2;
   }
 
   .is-mobile-compact .oscilloscope {
