@@ -8,6 +8,7 @@ const CHANNELS: Array<{ id: NesChannelId; label: string; detail: string }> = [
   { id: "noise", label: "NOISE", detail: "Percussion" },
   { id: "dpcm", label: "DPCM", detail: "Sample" }
 ];
+const LCD_SEGMENTS = 14;
 
 interface ChannelRackProps {
   theme: PlayerVisualTheme;
@@ -39,23 +40,38 @@ export function ChannelRack({ theme, muted, levels, enabled, onToggle }: Channel
             <strong>{label}</strong>
             <small>{detail}</small>
           </div>
-          <div className="channel__meter" aria-label={`${label} 音量 ${Math.round(level * 100)}%`}>
-            <i
-              style={{
-                backgroundColor: theme.channels[id],
-                width: `${Math.max(2, level * 100)}%`
-              }}
-            />
+          <div className="channel__lcd-row">
+            <div
+              className="channel__lcd"
+              role="meter"
+              aria-label={`${label} 音量`}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(level * 100)}
+            >
+              {Array.from({ length: LCD_SEGMENTS }, (_, segment) => {
+                const active = segment < Math.ceil(level * LCD_SEGMENTS);
+                return (
+                  <i
+                    key={segment}
+                    className={active ? "is-active" : ""}
+                    style={active ? { backgroundColor: theme.channels[id] } : undefined}
+                  />
+                );
+              })}
+            </div>
+            <button
+              className="channel__mute"
+              type="button"
+              disabled={!enabled}
+              aria-label={`${muted[id] ? "恢复" : "静音"} ${label}`}
+              aria-pressed={muted[id]}
+              title={muted[id] ? "恢复声道" : "静音声道"}
+              onClick={() => onToggle(id)}
+            >
+              <span aria-hidden="true">{muted[id] ? "×" : "◖"}</span>
+            </button>
           </div>
-          <button
-            className="channel__mute"
-            type="button"
-            disabled={!enabled}
-            aria-pressed={muted[id]}
-            onClick={() => onToggle(id)}
-          >
-            {muted[id] ? "MUTED" : "MUTE"}
-          </button>
         </article>
         );
       })}

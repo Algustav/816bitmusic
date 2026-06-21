@@ -692,7 +692,7 @@ button:disabled {
 
 .channel {
   position: relative;
-  min-height: 132px;
+  min-height: 104px;
   display: grid;
   grid-template-columns: 12px 1fr;
   gap: 10px;
@@ -735,36 +735,70 @@ button:disabled {
   font-size: 9px;
 }
 
-.channel__meter {
+.channel__lcd-row {
   grid-column: 1 / -1;
-  height: 18px;
-  margin-top: 14px;
-  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  gap: 7px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.channel__lcd {
+  height: 24px;
+  display: grid;
+  grid-template-columns: repeat(14, minmax(2px, 1fr));
+  gap: 3px;
+  align-items: center;
+  padding: 4px;
   border: 1px solid var(--line);
   background: var(--key-bg);
 }
 
-.channel__meter i {
-  display: block;
-  height: 100%;
-  opacity: 0.85;
-  box-shadow: 0 0 10px currentColor;
-  transition: width 32ms linear;
+.channel__lcd i {
+  height: 14px;
+  border: 1px solid color-mix(in srgb, var(--line), transparent 25%);
+  background: color-mix(in srgb, var(--text), transparent 94%);
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.04);
+  transition: background-color 32ms linear, box-shadow 32ms linear;
 }
 
-.channel.is-muted .channel__meter {
+.channel__lcd i.is-active {
+  border-color: transparent;
+  box-shadow:
+    inset 0 -3px rgba(0, 0, 0, 0.18),
+    0 0 5px currentColor;
+}
+
+.channel.is-muted .channel__lcd {
   opacity: 0.35;
 }
 
 .channel__mute {
-  grid-column: 1 / -1;
-  min-height: 30px;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
   border: 1px solid var(--line);
   color: var(--muted);
   background: var(--touch-bg);
   font-family: ui-monospace, monospace;
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.channel__mute:not(:disabled):hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.channel__mute[aria-pressed="true"] {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger), var(--touch-bg) 90%);
 }
 
 @media (max-width: 860px) {
