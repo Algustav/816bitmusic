@@ -18,10 +18,13 @@ function isIosLike(): boolean {
     (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
-export const engineMode: EngineMode = supportsAudioWorklet()
-  ? "realtime"
-  : isIosLike()
-    ? "ios-media"
+// WebKit can report a fully available AudioWorklet on HTTPS while producing
+// silent output on some iPhone/iPad versions. The media-element engine is the
+// reliable iOS path and now supplies the same waveform/channel telemetry.
+export const engineMode: EngineMode = isIosLike()
+  ? "ios-media"
+  : supportsAudioWorklet()
+    ? "realtime"
     : "compatibility";
 
 export const playerEngine: PlayerEngine =
