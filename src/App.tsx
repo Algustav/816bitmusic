@@ -310,15 +310,6 @@ export default function App() {
         </span>
       </section>
 
-      <button
-        className="mobile-layout-toggle"
-        type="button"
-        aria-pressed={mobileCompact}
-        onClick={() => setMobileCompact((compact) => !compact)}
-      >
-        MOBILE VIEW · {mobileCompact ? "COMPACT" : "ADAPTIVE"}
-      </button>
-
       <div className="workspace">
         <section className="theme-panel main-panel">
           <AlbumLibrary
@@ -533,6 +524,15 @@ export default function App() {
           </select>
         </label>
       </footer>
+
+      <button
+        className="mobile-layout-toggle"
+        type="button"
+        aria-pressed={mobileCompact}
+        onClick={() => setMobileCompact((compact) => !compact)}
+      >
+        MOBILE VIEW · {mobileCompact ? "COMPACT" : "ADAPTIVE"}
+      </button>
 
       <footer className="tools-footer">
         <a

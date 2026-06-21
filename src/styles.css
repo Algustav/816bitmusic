@@ -1006,35 +1006,14 @@ button:disabled {
   }
 
   .status-strip {
-    position: relative;
-    display: grid;
-    grid-template-columns: 10px 1fr;
-    gap: 4px 9px;
-    align-items: center;
-    padding: 9px 11px;
-  }
-
-  .status-strip > strong {
-    font-size: 9px;
-  }
-
-  .status-strip__album {
-    grid-column: 1 / -1;
-    padding-top: 3px;
-    overflow-wrap: anywhere;
-    color: var(--text);
-    font-family: "Segoe UI", system-ui, sans-serif;
-    font-size: 17px;
-    font-weight: 800;
-    letter-spacing: 0;
-    line-height: 1.2;
+    display: none;
   }
 
   .mobile-layout-toggle {
     width: 100%;
     min-height: 34px;
     display: block;
-    margin: 0 0 10px;
+    margin: 8px 0 0;
     border: 1px solid var(--line);
     color: var(--muted);
     background: var(--panel);
@@ -1134,25 +1113,9 @@ button:disabled {
     line-height: 1;
   }
 
-  .is-mobile-compact .status-strip {
-    display: flex;
-    min-height: 34px;
-    padding: 6px 9px;
-  }
-
-  .is-mobile-compact .status-strip__album {
-    grid-column: auto;
-    min-width: 0;
-    padding: 0;
-    overflow: hidden;
-    font-size: 13px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   .is-mobile-compact .mobile-layout-toggle {
     min-height: 30px;
-    margin-bottom: 6px;
+    margin-top: 5px;
   }
 
   .is-mobile-compact .main-panel,
