@@ -53,8 +53,8 @@ export default function App() {
   const [snapshot, setSnapshot] = useState<PlaybackSnapshot>(EMPTY_SNAPSHOT);
   const [selectedTrack, setSelectedTrack] = useState(1);
   const [seekPreview, setSeekPreview] = useState<number | null>(null);
-  const [loopMode, setLoopMode] = useState<LoopMode>("off");
-  const [autoPlay, setAutoPlay] = useState(false);
+  const [loopMode, setLoopMode] = useState<LoopMode>("all");
+  const [autoPlay, setAutoPlay] = useState(true);
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
   const [loadingAlbumId, setLoadingAlbumId] = useState<string | null>(null);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
