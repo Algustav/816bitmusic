@@ -19,7 +19,14 @@ const EMPTY_SNAPSHOT: PlaybackSnapshot = {
   currentTime: 0,
   durationWasEstimated: false,
   endedRevision: 0,
-  waveform: new Float32Array(128)
+  waveform: new Float32Array(128),
+  channelLevels: {
+    pulse1: 0,
+    pulse2: 0,
+    triangle: 0,
+    noise: 0,
+    dpcm: 0
+  }
 };
 
 type LoopMode = "off" | "one" | "all";
@@ -371,6 +378,7 @@ export default function App() {
         <ChannelRack
           theme={theme}
           muted={muted}
+          levels={snapshot.channelLevels}
           enabled={snapshot.state !== "empty" && engineMode !== "ios-media"}
           onToggle={toggleChannel}
         />

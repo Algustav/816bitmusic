@@ -154,11 +154,11 @@ interface NesChannelTelemetry {
 - [ ] 使用 AnalyserNode 获取总输出波形
 - [x] 实现整体示波器
 - [ ] 实现整体频谱
-- [ ] 为五个声道制作独立音量表
-- [ ] Pulse 通道根据频率和占空比绘制方波
-- [ ] Triangle 通道绘制三角波或低频地形
-- [ ] Noise 通道根据真实活动触发像素粒子
-- [ ] DPCM 通道显示采样脉冲
+- [x] 为五个声道制作独立真实音量表
+- [x] Pulse 通道根据真实包络绘制方波
+- [x] Triangle 通道绘制三角波或低频地形
+- [x] Noise 通道根据真实活动触发像素粒子
+- [x] DPCM 通道显示采样脉冲
 - [ ] 增加可由主题配置的辉光、余辉与 CRT 扫描线
 - [ ] 提供动画强度或视觉质量设置
 - [ ] 尊重 `prefers-reduced-motion`

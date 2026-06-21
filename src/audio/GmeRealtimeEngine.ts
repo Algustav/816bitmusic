@@ -14,6 +14,7 @@ export interface PlaybackSnapshot {
   durationWasEstimated: boolean;
   endedRevision: number;
   waveform: Float32Array;
+  channelLevels: Record<NesChannelId, number>;
 }
 
 type ProcessorMessage =
@@ -27,7 +28,13 @@ type ProcessorMessage =
     }
   | { type: "state"; state: PlaybackSnapshot["state"] }
   | { type: "status"; stage: "wasm" | "file" | "track" }
-  | { type: "progress"; currentTimeMs: number; ended: boolean; rms: number }
+  | {
+      type: "progress";
+      currentTimeMs: number;
+      ended: boolean;
+      rms: number;
+      channelLevels?: number[];
+    }
   | { type: "waveform"; samples: Float32Array }
   | { type: "error"; message: string };
 
@@ -48,6 +55,13 @@ export class GmeRealtimeEngine implements NsfEngine {
   private state: PlaybackSnapshot["state"] = "empty";
   private endedRevision = 0;
   private waveform = new Float32Array(128);
+  private channelLevels: Record<NesChannelId, number> = {
+    pulse1: 0,
+    pulse2: 0,
+    triangle: 0,
+    noise: 0,
+    dpcm: 0
+  };
   private muted = new Map<NesChannelId, boolean>();
   private readyWaiter: {
     resolve: () => void;
@@ -151,7 +165,7 @@ export class GmeRealtimeEngine implements NsfEngine {
     return CHANNELS.map((channel) => ({
       channel,
       active: this.state === "playing" && !this.muted.get(channel),
-      volume: this.state === "playing" && !this.muted.get(channel) ? this.rms : 0
+      volume: this.state === "playing" && !this.muted.get(channel) ? this.channelLevels[channel] : 0
     }));
   }
 
@@ -163,7 +177,8 @@ export class GmeRealtimeEngine implements NsfEngine {
       currentTime: this.currentTime,
       durationWasEstimated: this.duration === 0,
       endedRevision: this.endedRevision,
-      waveform: this.waveform
+      waveform: this.waveform,
+      channelLevels: this.channelLevels
     };
   }
 
@@ -181,7 +196,7 @@ export class GmeRealtimeEngine implements NsfEngine {
   private async ensureNode(): Promise<void> {
     if (this.node && this.context) return;
     this.context = new AudioContext({ latencyHint: "interactive" });
-    await this.context.audioWorklet.addModule("/audio/gme-realtime-worklet.js");
+    await this.context.audioWorklet.addModule("/audio/gme-realtime-worklet.js?v=multichannel-1");
     this.node = new AudioWorkletNode(this.context, "gme-realtime-processor", {
       numberOfInputs: 0,
       numberOfOutputs: 1,
@@ -200,6 +215,11 @@ export class GmeRealtimeEngine implements NsfEngine {
       } else if (message.type === "progress") {
         this.currentTime = message.currentTimeMs / 1000;
         this.rms = message.rms;
+        if (message.channelLevels) {
+          this.channelLevels = Object.fromEntries(
+            CHANNELS.map((channel, index) => [channel, message.channelLevels?.[index] ?? 0])
+          ) as Record<NesChannelId, number>;
+        }
         if (message.ended) {
           this.state = "ready";
           this.endedRevision += 1;
@@ -219,7 +239,7 @@ export class GmeRealtimeEngine implements NsfEngine {
 
   private async ensureWasmBytes(): Promise<ArrayBuffer> {
     if (this.wasmBytes) return this.wasmBytes;
-    const response = await fetch("/vendor/gme-realtime/realtime-gme.wasm");
+    const response = await fetch("/vendor/gme-realtime/realtime-gme.wasm?v=multichannel-1");
     if (!response.ok) throw new Error(`无法加载实时 GME WASM：${response.status}`);
     this.wasmBytes = await response.arrayBuffer();
     return this.wasmBytes;

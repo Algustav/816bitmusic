@@ -71,6 +71,13 @@ export class GmeMediaElementEngine implements NsfEngine {
   private duration = 0;
   private endedRevision = 0;
   private readonly waveform = new Float32Array(128);
+  private readonly channelLevels: Record<NesChannelId, number> = {
+    pulse1: 0,
+    pulse2: 0,
+    triangle: 0,
+    noise: 0,
+    dpcm: 0
+  };
   private objectUrl: string | null = null;
   private unlocked = false;
 
@@ -163,7 +170,8 @@ export class GmeMediaElementEngine implements NsfEngine {
       currentTime: Number.isFinite(this.audio.currentTime) ? this.audio.currentTime : 0,
       durationWasEstimated: false,
       endedRevision: this.endedRevision,
-      waveform: this.waveform
+      waveform: this.waveform,
+      channelLevels: this.channelLevels
     };
   }
 

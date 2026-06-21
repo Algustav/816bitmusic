@@ -159,7 +159,8 @@ class GmeRealtimeProcessor extends AudioWorkletProcessor {
     if (right !== left) right.fill(0);
     if (!this.playing || !this.ready || !this.exports) return true;
 
-    const sampleCount = left.length * 2;
+    const outputChannels = 16;
+    const sampleCount = left.length * outputChannels;
     this.ensureOutputBuffer(sampleCount);
     const rendered = this.exports.chip_render(this.outputPointer, sampleCount);
     if (!rendered) {
@@ -169,13 +170,23 @@ class GmeRealtimeProcessor extends AudioWorkletProcessor {
     }
 
     const samples = new Int16Array(this.exports.memory.buffer, this.outputPointer, sampleCount);
-    let squareSum = 0;
+    const channelSquareSums = new Float64Array(5);
     for (let frame = 0; frame < left.length; frame += 1) {
-      const leftValue = samples[frame * 2] / 32768;
-      const rightValue = samples[frame * 2 + 1] / 32768;
-      left[frame] = leftValue;
-      right[frame] = rightValue;
-      squareSum += leftValue * leftValue + rightValue * rightValue;
+      let leftValue = 0;
+      let rightValue = 0;
+      const frameOffset = frame * outputChannels;
+      for (let voice = 0; voice < 8; voice += 1) {
+        const voiceLeft = samples[frameOffset + voice * 2] / 32768;
+        const voiceRight = samples[frameOffset + voice * 2 + 1] / 32768;
+        leftValue += voiceLeft;
+        rightValue += voiceRight;
+        if (voice < 5) {
+          channelSquareSums[voice] +=
+            (voiceLeft * voiceLeft + voiceRight * voiceRight) * 0.5;
+        }
+      }
+      left[frame] = Math.max(-1, Math.min(1, leftValue));
+      right[frame] = Math.max(-1, Math.min(1, rightValue));
     }
 
     this.waveformCounter += 1;
@@ -194,7 +205,13 @@ class GmeRealtimeProcessor extends AudioWorkletProcessor {
         type: "progress",
         currentTimeMs: this.exports.chip_tell(),
         ended,
-        rms: Math.sqrt(squareSum / sampleCount)
+        rms: Math.sqrt(
+          channelSquareSums.reduce((sum, value) => sum + value, 0) / left.length
+        ),
+        channelLevels: Array.from(
+          channelSquareSums,
+          (value) => Math.min(1, Math.sqrt(value / left.length) * 5)
+        )
       });
       if (ended) {
         this.playing = false;

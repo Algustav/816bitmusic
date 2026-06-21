@@ -38,6 +38,7 @@ export interface PlaybackSnapshot {
   durationWasEstimated: boolean;
   endedRevision: number;
   waveform: Float32Array;
+  channelLevels: Record<NesChannelId, number>;
 }
 
 export class GmeRenderedEngine implements NsfEngine {
@@ -59,6 +60,13 @@ export class GmeRenderedEngine implements NsfEngine {
   private state: PlaybackSnapshot["state"] = "empty";
   private endedRevision = 0;
   private readonly waveform = new Float32Array(128);
+  private readonly channelLevels: Record<NesChannelId, number> = {
+    pulse1: 0,
+    pulse2: 0,
+    triangle: 0,
+    noise: 0,
+    dpcm: 0
+  };
   private durationWasEstimated = false;
   private renderToken = 0;
 
@@ -145,7 +153,8 @@ export class GmeRenderedEngine implements NsfEngine {
       currentTime,
       durationWasEstimated: this.durationWasEstimated,
       endedRevision: this.endedRevision,
-      waveform: this.waveform
+      waveform: this.waveform,
+      channelLevels: this.channelLevels
     };
   }
 

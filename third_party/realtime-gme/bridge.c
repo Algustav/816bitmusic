@@ -15,12 +15,28 @@ static int capture_error(gme_err_t error) {
 
 EMSCRIPTEN_KEEPALIVE
 int chip_load(const void* data, int size, int sample_rate) {
+  gme_type_t type;
   if (player) {
     gme_delete(player);
     player = NULL;
   }
   last_error = NULL;
-  return capture_error(gme_open_data(data, size, &player, sample_rate));
+  type = gme_identify_extension(gme_identify_header(data));
+  if (!type) {
+    last_error = gme_wrong_file_type;
+    return 0;
+  }
+  player = gme_new_emu_multi_channel(type, sample_rate);
+  if (!player) {
+    last_error = "Unable to allocate multichannel emulator";
+    return 0;
+  }
+  if (!capture_error(gme_load_data(player, data, size))) {
+    gme_delete(player);
+    player = NULL;
+    return 0;
+  }
+  return 1;
 }
 
 EMSCRIPTEN_KEEPALIVE
