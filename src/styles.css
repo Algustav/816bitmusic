@@ -692,7 +692,7 @@ button:disabled {
 
 .channel {
   position: relative;
-  min-height: 194px;
+  min-height: 132px;
   display: grid;
   grid-template-columns: 12px 1fr;
   gap: 10px;
@@ -737,8 +737,8 @@ button:disabled {
 
 .channel__meter {
   grid-column: 1 / -1;
-  height: 12px;
-  margin-top: 4px;
+  height: 18px;
+  margin-top: 14px;
   overflow: hidden;
   border: 1px solid var(--line);
   background: var(--key-bg);
@@ -749,70 +749,9 @@ button:disabled {
   height: 100%;
   opacity: 0.85;
   box-shadow: 0 0 10px currentColor;
-  transition: width 90ms linear;
+  transition: width 32ms linear;
 }
 
-.channel-animation {
-  grid-column: 1 / -1;
-  width: 100%;
-  height: 58px;
-  display: block;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  background:
-    linear-gradient(90deg, var(--grid-a) 1px, transparent 1px) 0 0 / 16px 16px,
-    linear-gradient(var(--grid-b) 1px, transparent 1px) 0 0 / 16px 16px,
-    var(--key-bg);
-}
-
-.channel-animation--wave polyline {
-  fill: none;
-  stroke-width: 2;
-  vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 0 4px currentColor);
-  transition: opacity 90ms linear;
-}
-
-.channel-animation--noise {
-  position: relative;
-}
-
-.channel-animation--noise i {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  box-shadow: 0 0 6px currentColor;
-  transition: opacity 70ms linear, transform 70ms linear;
-}
-
-.channel-animation--dpcm {
-  position: relative;
-}
-
-.channel-animation--dpcm i {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 38px;
-  height: 38px;
-  border: 2px solid;
-  border-radius: 50%;
-  transition: opacity 70ms linear, transform 70ms ease-out;
-}
-
-.channel-animation--dpcm b {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 12px currentColor;
-  transition: opacity 70ms linear;
-}
-
-.channel.is-muted .channel-animation,
 .channel.is-muted .channel__meter {
   opacity: 0.35;
 }

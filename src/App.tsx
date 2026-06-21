@@ -64,7 +64,7 @@ export default function App() {
   const theme = useMemo(() => adaptThemeForPlayer(getTheme(themeId)), [themeId]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setSnapshot(engine.getSnapshot()), 150);
+    const timer = window.setInterval(() => setSnapshot(engine.getSnapshot()), 33);
     return () => window.clearInterval(timer);
   }, []);
 

@@ -198,7 +198,7 @@ class GmeRealtimeProcessor extends AudioWorkletProcessor {
     }
 
     this.progressCounter += 1;
-    if (this.progressCounter >= 12) {
+    if (this.progressCounter >= 6) {
       this.progressCounter = 0;
       const ended = Boolean(this.exports.chip_track_ended());
       this.port.postMessage({
