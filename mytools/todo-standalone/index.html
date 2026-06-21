@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Todo</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: 28px;
+      color: var(--text, #e6edf3);
+      background:
+        linear-gradient(90deg, var(--grid-a, rgba(255,255,255,.035)) 1px, transparent 1px) 0 0 / 34px 34px,
+        linear-gradient(var(--grid-b, rgba(255,255,255,.03)) 1px, transparent 1px) 0 0 / 34px 34px,
+        radial-gradient(circle at 12% 14%, var(--glow-a, rgba(88,166,255,.13)), transparent 30%),
+        var(--bg, #0d1117);
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    }
+
+    main {
+      max-width: 820px;
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    header {
+      display: grid;
+      gap: 8px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 7vw, 58px);
+      line-height: .95;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted, #8b949e);
+      line-height: 1.55;
+    }
+
+    .composer {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--line, #30363d);
+      border-radius: 8px;
+      background: var(--panel, #161b22);
+      box-shadow: 0 16px 36px var(--shadow, rgba(1, 4, 9, .22));
+    }
+
+    .fields {
+      display: grid;
+      gap: 8px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line, #30363d);
+      border-radius: 6px;
+      color: var(--text, #e6edf3);
+      background: var(--key-bg, #0d1117);
+      font: inherit;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 68px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent, #58a6ff);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #58a6ff), transparent 78%);
+    }
+
+    button,
+    a {
+      min-height: 40px;
+      display: inline-grid;
+      place-items: center;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 6px;
+      color: #07120f;
+      background: var(--accent, #58a6ff);
+      font: inherit;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    button.secondary,
+    a.secondary {
+      color: var(--text, #e6edf3);
+      background: var(--touch-bg, #21262d);
+    }
+
+    .composer button {
+      align-self: start;
+      min-width: 88px;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      color: var(--muted, #8b949e);
+      font-size: 13px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 16px;
+      border: 1px solid var(--line, #30363d);
+      border-radius: 8px;
+      background: var(--panel, #161b22);
+      box-shadow: 0 16px 36px var(--shadow, rgba(1, 4, 9, .22));
+      transition: opacity .18s ease, transform .18s ease, background .18s ease;
+    }
+
+    .item.done {
+      opacity: .48;
+      background: color-mix(in srgb, var(--panel, #161b22), var(--bg, #0d1117) 55%);
+      box-shadow: none;
+    }
+
+    .item.done .title {
+      text-decoration: line-through;
+    }
+
+    .check {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--accent, #58a6ff);
+      margin-top: 2px;
+      cursor: pointer;
+    }
+
+    .title {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--text, #e6edf3);
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .note {
+      display: block;
+      color: var(--muted, #8b949e);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .empty {
+      display: none;
+      padding: 18px;
+      border: 1px dashed var(--line, #30363d);
+      border-radius: 8px;
+      color: var(--muted, #8b949e);
+      text-align: center;
+      background: color-mix(in srgb, var(--panel, #161b22), transparent 42%);
+    }
+
+    .empty.show {
+      display: block;
+    }
+
+    .back-link {
+      justify-self: center;
+    }
+
+    @media (max-width: 620px) {
+      body { padding: 18px; }
+      .composer { grid-template-columns: 1fr; }
+      .composer button { width: 100%; }
+      .toolbar { align-items: flex-start; flex-direction: column; }
+      .toolbar-actions { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Todo</h1>
+      <p>新增任务会保存在当前浏览器中，完成项会变暗并排到列表底部。</p>
+    </header>
+
+    <form class="composer" id="todoForm">
+      <div class="fields">
+        <input id="todoTitle" name="title" autocomplete="off" placeholder="新增任务" required>
+        <textarea id="todoNote" name="note" placeholder="备注，可选"></textarea>
+      </div>
+      <button type="submit">添加</button>
+    </form>
+
+    <div class="toolbar">
+      <span id="todoCount">0 个待办</span>
+      <div class="toolbar-actions">
+        <button class="secondary" id="clearDoneButton" type="button">清除已完成</button>
+      </div>
+    </div>
+
+    <ol class="list" id="todoList"></ol>
+    <div class="empty" id="emptyState">暂无任务。</div>
+    <a class="secondary back-link" href="/">返回 8+16bit 播放器</a>
+
+  </main>
+  <script type="module" src="./src/ui/page-theme.js"></script>
+  <script>
+    const STORAGE_KEY = "standalone-todos";
+    const defaultTodos = [];
+
+    const form = document.querySelector("#todoForm");
+    const titleInput = document.querySelector("#todoTitle");
+    const noteInput = document.querySelector("#todoNote");
+    const list = document.querySelector("#todoList");
+    const count = document.querySelector("#todoCount");
+    const emptyState = document.querySelector("#emptyState");
+    const clearDoneButton = document.querySelector("#clearDoneButton");
+
+    let todos = loadTodos();
+
+    function loadTodos() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        return Array.isArray(saved) ? saved : defaultTodos;
+      } catch {
+        return defaultTodos;
+      }
+    }
+
+    function saveTodos() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+    }
+
+    function sortedTodos() {
+      return [...todos].sort((a, b) => {
+        if (a.done !== b.done) return Number(a.done) - Number(b.done);
+        return a.createdAt - b.createdAt;
+      });
+    }
+
+    function renderTodos() {
+      list.innerHTML = "";
+      const ordered = sortedTodos();
+      ordered.forEach(todo => {
+        const item = document.createElement("li");
+        item.className = `item${todo.done ? " done" : ""}`;
+
+        const check = document.createElement("input");
+        check.className = "check";
+        check.type = "checkbox";
+        check.checked = todo.done;
+        check.setAttribute("aria-label", `完成：${todo.title}`);
+        check.addEventListener("change", () => toggleTodo(todo.id));
+
+        const content = document.createElement("div");
+        const title = document.createElement("strong");
+        title.className = "title";
+        title.textContent = todo.title;
+        content.append(title);
+
+        if (todo.note) {
+          const note = document.createElement("span");
+          note.className = "note";
+          note.textContent = todo.note;
+          content.append(note);
+        }
+
+        item.append(check, content);
+        list.append(item);
+      });
+
+      const activeCount = todos.filter(todo => !todo.done).length;
+      count.textContent = `${activeCount} 个待办 / ${todos.length} 个任务`;
+      emptyState.classList.toggle("show", todos.length === 0);
+      clearDoneButton.disabled = !todos.some(todo => todo.done);
+    }
+
+    function toggleTodo(id) {
+      todos = todos.map(todo => (
+        todo.id === id ? { ...todo, done: !todo.done, completedAt: Date.now() } : todo
+      ));
+      saveTodos();
+      renderTodos();
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      const title = titleInput.value.trim();
+      const note = noteInput.value.trim();
+      if (!title) return;
+      todos.push({
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        title,
+        note,
+        done: false,
+        createdAt: Date.now()
+      });
+      saveTodos();
+      form.reset();
+      titleInput.focus();
+      renderTodos();
+    });
+
+    clearDoneButton.addEventListener("click", () => {
+      todos = todos.filter(todo => !todo.done);
+      saveTodos();
+      renderTodos();
+    });
+
+    renderTodos();
+  </script>
+</body>
+</html>

@@ -276,41 +276,59 @@ export default function App() {
               className="transport__step"
               type="button"
               title="上一首"
+              aria-label="上一首"
               disabled={!metadata || selectedTrack <= 1 || snapshot.state === "rendering"}
               onClick={() => void moveTrack(-1)}
             >
-              ◀
+              <span className="transport__icon" aria-hidden="true">◀</span>
+              <span className="transport__label">PREV</span>
             </button>
             <button
               className="transport__main"
               type="button"
+              aria-label={
+                snapshot.state === "rendering"
+                  ? "正在准备播放"
+                  : snapshot.state === "playing"
+                    ? "暂停"
+                    : "播放"
+              }
               disabled={!metadata || snapshot.state === "rendering"}
               onClick={togglePlayback}
             >
-              {snapshot.state === "rendering"
-                ? "RENDERING…"
-                : snapshot.state === "playing"
-                  ? "PAUSE"
-                  : "PLAY"}
+              <span className="transport__icon" aria-hidden="true">
+                {snapshot.state === "rendering" ? "…" : snapshot.state === "playing" ? "Ⅱ" : "▶"}
+              </span>
+              <span className="transport__label">
+                {snapshot.state === "rendering"
+                  ? "RENDERING…"
+                  : snapshot.state === "playing"
+                    ? "PAUSE"
+                    : "PLAY"}
+              </span>
             </button>
             <button
               className="transport__step"
               type="button"
               title="下一首"
+              aria-label="下一首"
               disabled={
                 !metadata || selectedTrack >= metadata.trackCount || snapshot.state === "rendering"
               }
               onClick={() => void moveTrack(1)}
             >
-              ▶
+              <span className="transport__icon" aria-hidden="true">▶</span>
+              <span className="transport__label">NEXT</span>
             </button>
             <button
               className="transport__stop"
               type="button"
+              aria-label="停止"
               disabled={!metadata || snapshot.state === "rendering"}
               onClick={stopPlayback}
             >
-              STOP
+              <span className="transport__icon" aria-hidden="true">■</span>
+              <span className="transport__label">STOP</span>
             </button>
             <button
               className={`transport__loop ${loopMode !== "off" ? "is-active" : ""}`}
@@ -319,16 +337,19 @@ export default function App() {
               aria-label={`循环模式：${LOOP_MODE_LABELS[loopMode]}`}
               onClick={cycleLoopMode}
             >
-              {LOOP_MODE_LABELS[loopMode]}
+              <span className="transport__icon" aria-hidden="true">↻</span>
+              <span className="transport__label">{LOOP_MODE_LABELS[loopMode]}</span>
             </button>
             <button
               className={`transport__auto ${autoPlay ? "is-active" : ""}`}
               type="button"
               title="选择专辑后自动播放第一首"
+              aria-label={`自动播放：${autoPlay ? "开启" : "关闭"}`}
               aria-pressed={autoPlay}
               onClick={() => setAutoPlay((enabled) => !enabled)}
             >
-              AUTO {autoPlay ? "ON" : "OFF"}
+              <span className="transport__icon" aria-hidden="true">A</span>
+              <span className="transport__label">AUTO {autoPlay ? "ON" : "OFF"}</span>
             </button>
             <div className="transport__time">
               <span>{formatTime(seekPreview ?? snapshot.currentTime)}</span>
@@ -392,6 +413,16 @@ export default function App() {
             ))}
           </select>
         </label>
+      </footer>
+
+      <footer className="tools-footer">
+        <a
+          className="tools-footer__link"
+          href={`/mytools/todo-standalone/?theme=${encodeURIComponent(themeId)}`}
+        >
+          <span aria-hidden="true">✓</span>
+          Todo List
+        </a>
       </footer>
     </main>
   );

@@ -94,6 +94,34 @@ button:disabled {
   display: none;
 }
 
+.tools-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+  padding: 10px;
+}
+
+.tools-footer__link {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: var(--panel);
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+}
+
+.tools-footer__link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(0, 1.65fr) minmax(330px, 0.75fr);
@@ -403,6 +431,10 @@ button:disabled {
   font-family: ui-monospace, monospace;
   font-size: 12px;
   font-weight: 900;
+}
+
+.transport__icon {
+  display: none;
 }
 
 .transport__step,
@@ -1106,10 +1138,10 @@ button:disabled {
   }
 
   .is-mobile-compact .transport {
-    grid-template-columns: 38px minmax(0, 1fr) 38px;
-    gap: 6px;
+    grid-template-columns: repeat(6, 30px) minmax(60px, 1fr);
+    gap: 3px;
     margin-top: 6px;
-    padding: 7px;
+    padding: 5px;
   }
 
   .is-mobile-compact .transport__main,
@@ -1117,18 +1149,40 @@ button:disabled {
   .is-mobile-compact .transport__stop,
   .is-mobile-compact .transport__loop,
   .is-mobile-compact .transport__auto {
-    min-height: 36px;
+    min-width: 0;
+    min-height: 34px;
+    padding: 0;
+    font-size: 13px;
   }
 
   .is-mobile-compact .transport__stop,
   .is-mobile-compact .transport__loop,
   .is-mobile-compact .transport__auto {
-    grid-column: span 1;
+    grid-column: auto;
+  }
+
+  .is-mobile-compact .transport__icon {
+    display: inline;
+  }
+
+  .is-mobile-compact .transport__label {
+    display: none;
   }
 
   .is-mobile-compact .transport__time {
-    min-height: 30px;
-    grid-column: 1 / -1;
+    min-width: 0;
+    min-height: 34px;
+    grid-column: auto;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .is-mobile-compact .transport__time > span {
+    display: none;
+  }
+
+  .is-mobile-compact .transport__seek {
+    min-width: 0;
   }
 
   .is-mobile-compact .track-sidebar {
@@ -1147,5 +1201,10 @@ button:disabled {
   .is-mobile-compact .mobile-theme-footer {
     margin-top: 7px;
     padding: 8px;
+  }
+
+  .is-mobile-compact .tools-footer {
+    margin-top: 5px;
+    padding: 5px;
   }
 }
