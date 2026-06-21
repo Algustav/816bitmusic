@@ -1,6 +1,10 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { applyCssTheme, defaultTheme, getTheme } from "../theme-kit/theme.js";
+import "@fontsource/silkscreen/latin-400.css";
+import "@fontsource/silkscreen/latin-700.css";
+import "@fontsource/ibm-plex-mono/latin-400.css";
+import "@fontsource/ibm-plex-mono/latin-600.css";
 import "../theme-kit/theme.css";
 import "./styles.css";
 import App from "./App";

@@ -106,6 +106,8 @@ button:disabled {
 .tools-footer {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: 14px;
   padding: 10px;
 }
@@ -126,9 +128,54 @@ button:disabled {
   text-decoration: none;
 }
 
+.tools-footer button.tools-footer__link {
+  cursor: pointer;
+}
+
+.tools-footer__link.is-active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .tools-footer__link:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.app-shell.is-retro-font {
+  font-family: "IBM Plex Mono", "Microsoft YaHei", "PingFang SC", monospace;
+}
+
+.app-shell.is-retro-font button,
+.app-shell.is-retro-font select,
+.app-shell.is-retro-font .status-strip,
+.app-shell.is-retro-font .album-card__number,
+.app-shell.is-retro-font .album-card small,
+.app-shell.is-retro-font .now-playing span,
+.app-shell.is-retro-font .oscilloscope__header,
+.app-shell.is-retro-font .transport,
+.app-shell.is-retro-font .track-row__number,
+.app-shell.is-retro-font .track-row__indicator,
+.app-shell.is-retro-font .track-row__duration,
+.app-shell.is-retro-font .track-row__copy small,
+.app-shell.is-retro-font .channel__number,
+.app-shell.is-retro-font .channel__mute,
+.app-shell.is-retro-font .tools-footer__link {
+  font-family: "IBM Plex Mono", "Microsoft YaHei", "PingFang SC", monospace;
+}
+
+.app-shell.is-retro-font .app-header h1,
+.app-shell.is-retro-font .kicker,
+.app-shell.is-retro-font .app-brand__mobile-subtitle,
+.app-shell.is-retro-font .section-index,
+.app-shell.is-retro-font .theme-picker > span,
+.app-shell.is-retro-font .album-library__header h2,
+.app-shell.is-retro-font .track-view-tabs button {
+  font-family: "Silkscreen", "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+.app-shell.is-retro-font .app-header h1 {
+  letter-spacing: -0.06em;
 }
 
 .workspace {
