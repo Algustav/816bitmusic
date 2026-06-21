@@ -374,8 +374,12 @@ export default function App() {
               disabled={!metadata || snapshot.state === "rendering"}
               onClick={togglePlayback}
             >
-              <span className="transport__icon" aria-hidden="true">
-                {snapshot.state === "rendering" ? "…" : snapshot.state === "playing" ? "Ⅱ" : "▶"}
+              <span className="transport__icon transport__play-icon" aria-hidden="true">
+                {snapshot.state === "rendering"
+                  ? "…"
+                  : snapshot.state === "playing"
+                    ? "Ⅱ"
+                    : "▶❙"}
               </span>
               <span className="transport__label">
                 {snapshot.state === "rendering"
@@ -415,7 +419,9 @@ export default function App() {
               aria-label={`循环模式：${LOOP_MODE_LABELS[loopMode]}`}
               onClick={cycleLoopMode}
             >
-              <span className="transport__icon" aria-hidden="true">↻</span>
+              <span className="transport__icon transport__loop-icon" aria-hidden="true">
+                ↻ <b>{loopMode.toUpperCase()}</b>
+              </span>
               <span className="transport__label">{LOOP_MODE_LABELS[loopMode]}</span>
             </button>
             <button
