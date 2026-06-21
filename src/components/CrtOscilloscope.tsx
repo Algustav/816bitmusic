@@ -38,7 +38,7 @@ export function CrtOscilloscope({ snapshot, theme }: CrtOscilloscopeProps) {
   useEffect(() => {
     samplesRef.current = snapshot.waveform;
     stateRef.current = snapshot.state;
-  }, [snapshot.state, snapshot.waveform]);
+  }, [snapshot]);
 
   useEffect(() => {
     themeRef.current = theme;

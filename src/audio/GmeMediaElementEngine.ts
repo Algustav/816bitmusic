@@ -6,13 +6,20 @@ import type {
   NsfMetadata
 } from "./types";
 import type { PlaybackSnapshot } from "./GmeRealtimeEngine";
+import {
+  clearPcmTelemetry,
+  downsampleRenderedChannels,
+  mixRenderedChannels,
+  updatePcmTelemetry
+} from "./pcmTelemetry";
 
-interface MixedRenderResult {
-  type: "rendered-mixed";
+interface RenderResult {
+  type: "rendered";
   sampleRate: number;
   durationMs: number;
+  durationWasEstimated: boolean;
   loopStartMs: number;
-  samples: ArrayBuffer;
+  channels: Record<string, ArrayBuffer>;
 }
 
 interface RenderError {
@@ -20,7 +27,7 @@ interface RenderError {
   message: string;
 }
 
-type WorkerResult = MixedRenderResult | RenderError;
+type WorkerResult = RenderResult | RenderError;
 
 const EMPTY_TELEMETRY: NesChannelTelemetry[] = [
   { channel: "pulse1", active: false, volume: 0 },
@@ -80,6 +87,8 @@ export class GmeMediaElementEngine implements NsfEngine {
   };
   private objectUrl: string | null = null;
   private unlocked = false;
+  private renderedChannels: Record<string, Int16Array> | null = null;
+  private sampleRate = 44_100;
 
   constructor() {
     this.audio.preload = "auto";
@@ -105,6 +114,8 @@ export class GmeMediaElementEngine implements NsfEngine {
     this.currentTrack = this.metadata.startingTrack;
     this.duration = this.durationForTrack(this.currentTrack);
     this.endedRevision = 0;
+    this.renderedChannels = null;
+    clearPcmTelemetry(this.waveform, this.channelLevels);
     this.state = "ready";
     return this.metadata;
   }
@@ -117,9 +128,13 @@ export class GmeMediaElementEngine implements NsfEngine {
       this.state = "rendering";
       const result = await this.render(track);
       if (result.type === "error") throw new Error(result.message);
+      const mixed = mixRenderedChannels(result.channels);
+      const telemetryStep = 8;
+      this.renderedChannels = downsampleRenderedChannels(result.channels, telemetryStep);
+      this.sampleRate = result.sampleRate / telemetryStep;
       this.revokeObjectUrl();
       this.objectUrl = URL.createObjectURL(
-        createMonoWav(new Int16Array(result.samples), result.sampleRate)
+        createMonoWav(mixed, result.sampleRate)
       );
       this.audio.src = this.objectUrl;
       this.currentTrack = track;
@@ -163,11 +178,23 @@ export class GmeMediaElementEngine implements NsfEngine {
 
   getSnapshot(): PlaybackSnapshot {
     const mediaDuration = Number.isFinite(this.audio.duration) ? this.audio.duration : this.duration;
+    const currentTime = Number.isFinite(this.audio.currentTime) ? this.audio.currentTime : 0;
+    if (this.state === "playing" && this.renderedChannels) {
+      updatePcmTelemetry(
+        this.renderedChannels,
+        this.sampleRate,
+        currentTime,
+        this.waveform,
+        this.channelLevels
+      );
+    } else {
+      clearPcmTelemetry(this.waveform, this.channelLevels);
+    }
     return {
       state: this.state,
       track: this.currentTrack,
       duration: mediaDuration || this.duration,
-      currentTime: Number.isFinite(this.audio.currentTime) ? this.audio.currentTime : 0,
+      currentTime,
       durationWasEstimated: false,
       endedRevision: this.endedRevision,
       waveform: this.waveform,
@@ -184,6 +211,7 @@ export class GmeMediaElementEngine implements NsfEngine {
     this.audio.load();
     this.metadata = null;
     this.fileData = null;
+    this.renderedChannels = null;
     this.state = "empty";
   }
 
@@ -226,7 +254,7 @@ export class GmeMediaElementEngine implements NsfEngine {
           fileData,
           fileId: this.fileId,
           track: track - 1,
-          renderMode: "mixed"
+          renderMode: "channels"
         },
         [fileData]
       );

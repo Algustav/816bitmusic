@@ -5,14 +5,11 @@ import type {
   NsfEngine,
   NsfMetadata
 } from "./types";
-
-const VOICE_NAME_BY_CHANNEL: Record<NesChannelId, string> = {
-  pulse1: "Square 1",
-  pulse2: "Square 2",
-  triangle: "Triangle",
-  noise: "Noise",
-  dpcm: "DMC"
-};
+import {
+  clearPcmTelemetry,
+  updatePcmTelemetry,
+  VOICE_NAME_BY_CHANNEL
+} from "./pcmTelemetry";
 
 interface RenderResult {
   type: "rendered";
@@ -146,6 +143,18 @@ export class GmeRenderedEngine implements NsfEngine {
       this.state === "playing" && this.context
         ? Math.min(this.duration, this.context.currentTime - this.startedAt)
         : this.offset;
+    if (this.state === "playing" && this.renderedChannels) {
+      updatePcmTelemetry(
+        this.renderedChannels,
+        Object.values(this.renderedChannels)[0]?.sampleRate ?? 44_100,
+        currentTime,
+        this.waveform,
+        this.channelLevels,
+        this.muted
+      );
+    } else {
+      clearPcmTelemetry(this.waveform, this.channelLevels);
+    }
     return {
       state: this.state,
       track: this.currentTrack,
