@@ -131,7 +131,8 @@ button:disabled {
 .album-library__header h2 {
   margin: 0;
   color: var(--text);
-  font-size: 13px;
+  font-size: 16px;
+  line-height: 1.15;
   text-transform: uppercase;
 }
 
@@ -154,7 +155,7 @@ button:disabled {
 
 .album-card {
   position: relative;
-  min-height: 58px;
+  min-height: 70px;
   display: grid;
   align-content: center;
   gap: 4px;
@@ -187,11 +188,12 @@ button:disabled {
 }
 
 .album-card strong {
+  display: -webkit-box;
   overflow: hidden;
-  font-size: 11px;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 14px;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .album-card small {
@@ -252,7 +254,8 @@ button:disabled {
 .panel-heading h2 {
   margin: 0;
   color: var(--text);
-  font-size: 18px;
+  font-size: 16px;
+  line-height: 1.15;
   text-transform: uppercase;
 }
 
@@ -470,7 +473,8 @@ button:disabled {
 .track-list-panel__header h2 {
   margin: 0;
   color: var(--text);
-  font-size: 13px;
+  font-size: 16px;
+  line-height: 1.15;
   text-transform: uppercase;
 }
 
