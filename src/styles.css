@@ -128,15 +128,6 @@ button:disabled {
   text-decoration: none;
 }
 
-.tools-footer button.tools-footer__link {
-  cursor: pointer;
-}
-
-.tools-footer__link.is-active {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
 .tools-footer__link:hover {
   border-color: var(--accent);
   color: var(--accent);
@@ -176,6 +167,14 @@ button:disabled {
 
 .app-shell.is-retro-font .app-header h1 {
   letter-spacing: -0.06em;
+}
+
+.app-shell.is-retro-font .track-view-tabs button,
+.app-shell.is-retro-font .oscilloscope__header .section-index,
+.app-shell.is-retro-font .theme-picker > span {
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
 }
 
 .workspace {
@@ -648,7 +647,7 @@ button:disabled {
   background: transparent;
   font-family: "Segoe UI", system-ui, sans-serif;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 400;
   letter-spacing: 0.02em;
   line-height: 1;
   text-transform: uppercase;

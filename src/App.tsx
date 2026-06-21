@@ -18,7 +18,6 @@ import { usePlayerStore } from "./store/playerStore";
 import { adaptThemeForPlayer } from "./theme/adaptThemeForPlayer";
 
 const STORAGE_KEY = "chip-player-theme";
-const FONT_STORAGE_KEY = "chip-player-font-mode";
 const EMPTY_SNAPSHOT: PlaybackSnapshot = {
   state: "empty",
   track: 1,
@@ -53,10 +52,6 @@ function initialMobileCompact(): boolean {
   return window.matchMedia("(max-width: 560px)").matches;
 }
 
-function initialRetroFont(): boolean {
-  return localStorage.getItem(FONT_STORAGE_KEY) === "retro";
-}
-
 function formatTime(seconds: number): string {
   const safe = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
   const minutes = Math.floor(safe / 60);
@@ -74,7 +69,6 @@ export default function App() {
   const [favorites, setFavorites] = useState(loadFavorites);
   const [favoriteMetadata, setFavoriteMetadata] = useState<Record<string, NsfMetadata>>({});
   const [mobileCompact, setMobileCompact] = useState(initialMobileCompact);
-  const [retroFont, setRetroFont] = useState(initialRetroFont);
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
   const [loadingAlbumId, setLoadingAlbumId] = useState<string | null>(null);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
@@ -111,10 +105,6 @@ export default function App() {
   useEffect(() => {
     saveFavorites(favorites);
   }, [favorites]);
-
-  useEffect(() => {
-    localStorage.setItem(FONT_STORAGE_KEY, retroFont ? "retro" : "original");
-  }, [retroFont]);
 
   useEffect(() => {
     const missingAlbumIds = [...new Set(favorites.map((favorite) => favorite.albumId))].filter(
@@ -285,11 +275,7 @@ export default function App() {
   };
 
   return (
-    <main
-      className={`app-shell ${mobileCompact ? "is-mobile-compact" : ""} ${
-        retroFont ? "is-retro-font" : ""
-      }`}
-    >
+    <main className={`app-shell is-retro-font ${mobileCompact ? "is-mobile-compact" : ""}`}>
       <header className="app-header">
         <div className="app-brand">
           <span className="kicker">CHIP MUSIC VISUAL LAB</span>
@@ -562,15 +548,6 @@ export default function App() {
       </button>
 
       <footer className="tools-footer">
-        <button
-          className={`tools-footer__link ${retroFont ? "is-active" : ""}`}
-          type="button"
-          aria-pressed={retroFont}
-          onClick={() => setRetroFont((enabled) => !enabled)}
-        >
-          <span aria-hidden="true">Aa</span>
-          FONT · {retroFont ? "RETRO" : "ORIGINAL"}
-        </button>
         <a
           className="tools-footer__link"
           href={`/mytools/todo-standalone/?theme=${encodeURIComponent(themeId)}`}
