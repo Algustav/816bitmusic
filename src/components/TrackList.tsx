@@ -6,7 +6,10 @@ interface TrackListProps {
   selectedTrack: number;
   snapshot: PlaybackSnapshot;
   disabled?: boolean;
+  favoriteTracks: ReadonlySet<number>;
+  onShowFavorites: () => void;
   onPlay: (track: number) => void;
+  onToggleFavorite: (track: number) => void;
 }
 
 function formatDuration(milliseconds?: number, fadeMilliseconds?: number): string {
@@ -21,14 +24,21 @@ export function TrackList({
   selectedTrack,
   snapshot,
   disabled,
-  onPlay
+  favoriteTracks,
+  onShowFavorites,
+  onPlay,
+  onToggleFavorite
 }: TrackListProps) {
   return (
     <section className="track-list-panel" aria-label="专辑曲目">
-      <header className="track-list-panel__header">
-        <div>
-          <span className="section-index">02</span>
-          <h2>Album Tracks</h2>
+      <header className="track-list-panel__header track-list-panel__header--tabs">
+        <div className="track-view-tabs" role="tablist" aria-label="曲目列表">
+          <button className="is-active" type="button" role="tab" aria-selected="true">
+            Album
+          </button>
+          <button type="button" role="tab" aria-selected="false" onClick={onShowFavorites}>
+            ☆ Favorites
+          </button>
         </div>
         <span>{metadata.trackCount} TRACKS</span>
       </header>
@@ -41,8 +51,9 @@ export function TrackList({
           const loading = selected && snapshot.state === "rendering";
           const title = metadata.trackTitles[index] || `Track ${String(track).padStart(2, "0")}`;
 
+          const favorite = favoriteTracks.has(track);
           return (
-            <li key={track}>
+            <li className="track-row-shell" key={track}>
               <button
                 className={`track-row ${selected ? "is-selected" : ""} ${playing ? "is-playing" : ""}`}
                 type="button"
@@ -58,6 +69,16 @@ export function TrackList({
                 <span className="track-row__duration">
                   {formatDuration(metadata.trackTimesMs[index], metadata.trackFadesMs[index])}
                 </span>
+              </button>
+              <button
+                className={`track-row__favorite ${favorite ? "is-favorite" : ""}`}
+                type="button"
+                aria-label={`${favorite ? "取消收藏" : "收藏"} ${title}`}
+                aria-pressed={favorite}
+                title={favorite ? "取消收藏" : "收藏曲目"}
+                onClick={() => onToggleFavorite(track)}
+              >
+                {favorite ? "★" : "☆"}
               </button>
             </li>
           );

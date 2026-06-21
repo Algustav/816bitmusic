@@ -2,11 +2,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { applyCssTheme, defaultTheme, getTheme, listThemes } from "../theme-kit/theme.js";
 import type { PlaybackSnapshot } from "./audio/GmeRealtimeEngine";
 import { engineMode, playerEngine as engine } from "./audio/playerEngine";
-import type { NesChannelId } from "./audio/types";
+import type { NesChannelId, NsfMetadata } from "./audio/types";
+import { parseNsfMetadata } from "./audio/nsfMetadata";
 import { AlbumLibrary } from "./components/AlbumLibrary";
 import { ChannelRack } from "./components/ChannelRack";
 import { CrtOscilloscope } from "./components/CrtOscilloscope";
+import {
+  FavoriteTrackList,
+  type ResolvedFavorite
+} from "./components/FavoriteTrackList";
 import { TrackList } from "./components/TrackList";
+import { loadFavorites, saveFavorites, toggleFavorite } from "./favorites/favorites";
 import { albums, type AlbumEntry } from "./library/albumLibrary";
 import { usePlayerStore } from "./store/playerStore";
 import { adaptThemeForPlayer } from "./theme/adaptThemeForPlayer";
@@ -55,6 +61,9 @@ export default function App() {
   const [seekPreview, setSeekPreview] = useState<number | null>(null);
   const [loopMode, setLoopMode] = useState<LoopMode>("all");
   const [autoPlay, setAutoPlay] = useState(true);
+  const [trackView, setTrackView] = useState<"album" | "favorites">("album");
+  const [favorites, setFavorites] = useState(loadFavorites);
+  const [favoriteMetadata, setFavoriteMetadata] = useState<Record<string, NsfMetadata>>({});
   const [mobileCompact, setMobileCompact] = useState(false);
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
   const [loadingAlbumId, setLoadingAlbumId] = useState<string | null>(null);
@@ -63,11 +72,69 @@ export default function App() {
   const { metadata, error, muted, setLoadedFile, setLoading, setError, toggleMuted } =
     usePlayerStore();
   const theme = useMemo(() => adaptThemeForPlayer(getTheme(themeId)), [themeId]);
+  const selectedAlbum = useMemo(
+    () => albums.find((album) => album.id === selectedAlbumId) ?? null,
+    [selectedAlbumId]
+  );
+  const albumFavoriteTracks = useMemo(() => {
+    const tracks = new Set<number>();
+    if (!selectedAlbumId) return tracks;
+    for (const favorite of favorites) {
+      if (favorite.albumId === selectedAlbumId) tracks.add(favorite.track);
+    }
+    return tracks;
+  }, [favorites, selectedAlbumId]);
+  const resolvedFavorites = useMemo(
+    () =>
+      favorites.flatMap<ResolvedFavorite>((favorite) => {
+        const album = albums.find((item) => item.id === favorite.albumId);
+        return album ? [{ favorite, album, metadata: favoriteMetadata[favorite.albumId] }] : [];
+      }),
+    [favoriteMetadata, favorites]
+  );
 
   useEffect(() => {
     const timer = window.setInterval(() => setSnapshot(engine.getSnapshot()), 33);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    saveFavorites(favorites);
+  }, [favorites]);
+
+  useEffect(() => {
+    const missingAlbumIds = [...new Set(favorites.map((favorite) => favorite.albumId))].filter(
+      (albumId) => !favoriteMetadata[albumId]
+    );
+    if (!missingAlbumIds.length) return;
+    let cancelled = false;
+
+    void Promise.all(
+      missingAlbumIds.map(async (albumId) => {
+        const album = albums.find((item) => item.id === albumId);
+        if (!album) return null;
+        const response = await fetch(album.url);
+        if (!response.ok) return null;
+        return [albumId, parseNsfMetadata(await response.arrayBuffer(), album.fileName)] as const;
+      })
+    )
+      .then((entries) => {
+        if (cancelled) return;
+        const loadedEntries = entries.filter((entry) => entry !== null);
+        if (!loadedEntries.length) return;
+        setFavoriteMetadata((current) => ({
+          ...current,
+          ...Object.fromEntries(loadedEntries)
+        }));
+      })
+      .catch(() => {
+        // A temporary metadata fetch failure must not interrupt playback.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [favoriteMetadata, favorites]);
 
   useEffect(() => {
     if (!metadata || snapshot.endedRevision <= handledEndedRevision.current) return;
@@ -96,7 +163,10 @@ export default function App() {
     setThemeId(next.id);
   };
 
-  const loadAlbum = async (album: AlbumEntry) => {
+  const loadAlbum = async (
+    album: AlbumEntry,
+    options: { track?: number; play?: boolean } = {}
+  ) => {
     setLoadingAlbumId(album.id);
     setLoading(true);
     setError(null);
@@ -107,13 +177,18 @@ export default function App() {
       const data = await response.arrayBuffer();
       const nextMetadata = await engine.load(data, album.fileName);
       setLoadedFile(data, nextMetadata);
+      setFavoriteMetadata((current) => ({ ...current, [album.id]: nextMetadata }));
       setSnapshot(engine.getSnapshot());
-      setSelectedTrack(nextMetadata.startingTrack);
+      const targetTrack = Math.min(
+        nextMetadata.trackCount,
+        Math.max(1, options.track ?? nextMetadata.startingTrack)
+      );
+      setSelectedTrack(targetTrack);
       setSeekPreview(null);
       handledEndedRevision.current = 0;
       setSelectedAlbumId(album.id);
-      if (autoPlay) {
-        await engine.play(nextMetadata.startingTrack);
+      if (options.play ?? autoPlay) {
+        await engine.play(targetTrack);
         setSnapshot(engine.getSnapshot());
       }
     } catch (reason) {
@@ -121,6 +196,18 @@ export default function App() {
     } finally {
       setLoadingAlbumId(null);
     }
+  };
+
+  const toggleTrackFavorite = (albumId: string, track: number) => {
+    setFavorites((current) => toggleFavorite(current, albumId, track));
+  };
+
+  const playFavorite = async (album: AlbumEntry, track: number) => {
+    if (album.id === selectedAlbumId && metadata) {
+      await playTrack(track);
+      return;
+    }
+    await loadAlbum(album, { track, play: true });
   };
 
   const toggleChannel = (channel: NesChannelId) => {
@@ -380,20 +467,52 @@ export default function App() {
         </section>
 
         <aside className="theme-panel track-sidebar">
-          {metadata ? (
+          {trackView === "favorites" ? (
+            <FavoriteTrackList
+              favorites={resolvedFavorites}
+              selectedAlbumId={selectedAlbumId}
+              selectedTrack={selectedTrack}
+              playing={snapshot.state === "playing"}
+              disabled={snapshot.state === "rendering"}
+              onShowAlbum={() => setTrackView("album")}
+              onPlay={(album, track) => void playFavorite(album, track)}
+              onToggleFavorite={toggleTrackFavorite}
+            />
+          ) : metadata && selectedAlbum ? (
             <TrackList
               metadata={metadata}
               selectedTrack={selectedTrack}
               snapshot={snapshot}
               disabled={snapshot.state === "rendering"}
+              favoriteTracks={albumFavoriteTracks}
+              onShowFavorites={() => setTrackView("favorites")}
               onPlay={(track) => void playTrack(track)}
+              onToggleFavorite={(track) => toggleTrackFavorite(selectedAlbum.id, track)}
             />
           ) : (
-            <div className="track-sidebar__empty">
-              <span className="section-index">02</span>
-              <strong>Album Tracks</strong>
-              <p>从左侧选择一张专辑，这里会列出全部曲目。</p>
-            </div>
+            <section className="track-list-panel">
+              <header className="track-list-panel__header track-list-panel__header--tabs">
+                <div className="track-view-tabs" role="tablist" aria-label="曲目列表">
+                  <button className="is-active" type="button" role="tab" aria-selected="true">
+                    Album
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected="false"
+                    onClick={() => setTrackView("favorites")}
+                  >
+                    ☆ Favorites
+                  </button>
+                </div>
+                <span>{favorites.length} SAVED</span>
+              </header>
+              <div className="track-sidebar__empty">
+                <span className="section-index">02</span>
+                <strong>Album Tracks</strong>
+                <p>从左侧选择一张专辑，这里会列出全部曲目。</p>
+              </div>
+            </section>
           )}
         </aside>
       </div>
