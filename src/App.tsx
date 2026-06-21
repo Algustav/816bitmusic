@@ -253,6 +253,14 @@ export default function App() {
 
           <CrtOscilloscope snapshot={snapshot} theme={theme} />
 
+          <ChannelRack
+            theme={theme}
+            muted={muted}
+            levels={snapshot.channelLevels}
+            enabled={snapshot.state !== "empty" && engineMode !== "ios-media"}
+            onToggle={toggleChannel}
+          />
+
           <div className="transport">
             <button
               className="transport__step"
@@ -358,31 +366,6 @@ export default function App() {
           )}
         </aside>
       </div>
-
-      <section className="theme-panel channels-panel">
-        <div className="panel-heading">
-          <div>
-            <span className="section-index">03</span>
-            <h2>NES Channels</h2>
-          </div>
-          <span className={`badge ${snapshot.duration ? "" : "badge--muted"}`}>
-            {snapshot.state !== "empty"
-              ? engineMode === "realtime"
-                ? "REALTIME ENGINE"
-                : engineMode === "ios-media"
-                  ? "IOS MEDIA ENGINE"
-                  : "COMPAT ENGINE"
-              : "WAITING FOR FILE"}
-          </span>
-        </div>
-        <ChannelRack
-          theme={theme}
-          muted={muted}
-          levels={snapshot.channelLevels}
-          enabled={snapshot.state !== "empty" && engineMode !== "ios-media"}
-          onToggle={toggleChannel}
-        />
-      </section>
     </main>
   );
 }
