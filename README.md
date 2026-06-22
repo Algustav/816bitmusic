@@ -86,6 +86,18 @@ npm run build:gme
 - Todo items are stored only in the browser, and the current player theme is
   passed to the tool from the footer link.
 
+## PWA 2.0
+
+The 2.0 branch precaches the complete static application, all bundled NSFe
+albums, both GME WASM engines, workers, worklets, fonts, icons, and the Todo
+page. Build and audit the offline package with:
+
+```bash
+npm run build:pwa
+```
+
+The immutable pre-PWA player is archived by the Git tag `release-1.0`.
+
 构建脚本使用 `.tooling/` 下的 Emscripten SDK；该工具链目录不提交到 Git。
 已生成的 `public/vendor/gme-realtime/realtime-gme.wasm` 会随静态站点发布。
 

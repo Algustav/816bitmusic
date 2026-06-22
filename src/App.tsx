@@ -7,6 +7,7 @@ import { parseNsfMetadata } from "./audio/nsfMetadata";
 import { AlbumLibrary } from "./components/AlbumLibrary";
 import { ChannelRack } from "./components/ChannelRack";
 import { CrtOscilloscope } from "./components/CrtOscilloscope";
+import { PwaStatus } from "./components/PwaStatus";
 import {
   FavoriteTrackList,
   type ResolvedFavorite
@@ -537,6 +538,8 @@ export default function App() {
         </label>
       </footer>
 
+      <PwaStatus />
+
       <button
         className="mobile-layout-toggle"
         type="button"
@@ -549,7 +552,7 @@ export default function App() {
       <footer className="tools-footer">
         <a
           className="tools-footer__link"
-          href={`/mytools/todo-standalone/?theme=${encodeURIComponent(themeId)}`}
+          href={`/mytools/todo-standalone/index.html?theme=${encodeURIComponent(themeId)}`}
         >
           <span aria-hidden="true">✓</span>
           Todo List

@@ -8,3 +8,9 @@
 
 /*.js
   Cross-Origin-Resource-Policy: same-origin
+
+/sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
+
+/site.webmanifest
+  Cache-Control: no-cache

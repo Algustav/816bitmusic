@@ -2,6 +2,7 @@
   "name": "8+16bit Chip Music Lab",
   "short_name": "8+16bit",
   "description": "NES 与 Mega Drive 芯片音乐可视化播放器",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

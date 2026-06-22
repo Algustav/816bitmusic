@@ -133,6 +133,60 @@ button:disabled {
   color: var(--accent);
 }
 
+.pwa-status {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: var(--panel);
+  font-family: "IBM Plex Mono", "Microsoft YaHei", "PingFang SC", monospace;
+  font-size: 10px;
+}
+
+.pwa-status__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px var(--gold);
+}
+
+.pwa-status__dot.is-ready {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.pwa-status__dot.is-error {
+  background: var(--danger);
+  box-shadow: 0 0 8px var(--danger);
+}
+
+.pwa-status button {
+  min-height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  color: var(--text);
+  background: var(--touch-bg);
+  font: inherit;
+}
+
+.pwa-status button:not(.pwa-status__dismiss) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pwa-status__dismiss {
+  width: 26px;
+  padding: 0;
+  color: var(--muted);
+}
+
 .app-shell.is-retro-font {
   font-family: "IBM Plex Mono", "Microsoft YaHei", "PingFang SC", monospace;
 }
@@ -1171,6 +1225,11 @@ button:disabled {
 
   .mobile-theme-footer .theme-picker {
     width: 100%;
+  }
+
+  .pwa-status {
+    justify-content: flex-start;
+    margin-top: 7px;
   }
 
   .is-mobile-compact {
