@@ -10,6 +10,7 @@
     "build": "tsc -b && vite build",
     "verify:pwa": "node tools/verify-pwa-build.mjs",
     "build:pwa": "npm run build && npm run verify:pwa",
+    "package:cloudflare": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/package-cloudflare-pages.ps1",
     "lint": "eslint .",
     "test": "vitest run",
     "preview": "vite preview"
