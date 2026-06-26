@@ -8,5 +8,10 @@ Thumbs.db
 __pycache__/
 .analysis-*/
 .tooling/
+tmp/
+*.zip
 FC_Music_Collection_*/
 FC_Music_Collection_*.zip
+!FC_Music_Collection_1_NSFe/
+!FC_Music_Collection_1_NSFe/*.nsfe
+!FC_Music_Collection_1_NSFe/MANIFEST.md
