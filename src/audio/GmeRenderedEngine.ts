@@ -41,6 +41,8 @@ export interface PlaybackSnapshot {
 export class GmeRenderedEngine implements NsfEngine {
   private context: AudioContext | null = null;
   private worker: Worker | null = null;
+  private masterGain: GainNode | null = null;
+  private masterVolume = 1;
   private metadata: NsfMetadata | null = null;
   private fileData: ArrayBuffer | null = null;
   private fileId = "";
@@ -122,6 +124,13 @@ export class GmeRenderedEngine implements NsfEngine {
     if (wasPlaying) this.startSources(target);
   }
 
+  setMasterVolume(volume: number): void {
+    this.masterVolume = Math.min(1, Math.max(0, volume));
+    if (this.masterGain && this.context) {
+      this.masterGain.gain.setTargetAtTime(this.masterVolume, this.context.currentTime, 0.01);
+    }
+  }
+
   setVoiceMuted(channel: NesChannelId, muted: boolean): void {
     this.muted.set(channel, muted);
     const gain = this.gains.get(VOICE_NAME_BY_CHANNEL[channel]);
@@ -172,6 +181,8 @@ export class GmeRenderedEngine implements NsfEngine {
     this.stopKeepAlive();
     this.worker?.terminate();
     this.worker = null;
+    this.masterGain?.disconnect();
+    this.masterGain = null;
     void this.context?.close();
     this.context = null;
     this.fileData = null;
@@ -182,6 +193,7 @@ export class GmeRenderedEngine implements NsfEngine {
 
   private async ensureContext(): Promise<void> {
     this.context ??= new AudioContext({ latencyHint: "interactive" });
+    this.masterGain ??= new GainNode(this.context, { gain: this.masterVolume });
     if (this.context.state === "suspended") await this.context.resume();
     if (!this.keepAlive && this.context.state === "running") {
       this.keepAlive = this.context.createOscillator();
@@ -262,7 +274,7 @@ export class GmeRenderedEngine implements NsfEngine {
         (id) => VOICE_NAME_BY_CHANNEL[id] === name
       );
       gain.gain.value = channel && this.muted.get(channel) ? 0 : 1;
-      source.connect(gain).connect(this.context.destination);
+      source.connect(gain).connect(this.masterGain!).connect(this.context.destination);
       source.start(0, offset);
       this.sources.set(name, source);
       this.gains.set(name, gain);

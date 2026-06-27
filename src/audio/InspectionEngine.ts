@@ -20,6 +20,10 @@ export class InspectionEngine implements NsfEngine {
 
   pause(): void {}
   stop(): void {}
+  setMasterVolume(volume: number): void {
+    void volume;
+  }
+
   setVoiceMuted(channel: NesChannelId, muted: boolean): void {
     void channel;
     void muted;

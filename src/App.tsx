@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { applyCssTheme, defaultTheme, getTheme, listThemes } from "../theme-kit/theme.js";
 import type { PlaybackSnapshot } from "./audio/GmeRealtimeEngine";
 import { engineMode, playerEngine as engine } from "./audio/playerEngine";
@@ -7,6 +7,7 @@ import { parseNsfMetadata } from "./audio/nsfMetadata";
 import { AlbumLibrary } from "./components/AlbumLibrary";
 import { ChannelRack } from "./components/ChannelRack";
 import { CrtOscilloscope } from "./components/CrtOscilloscope";
+import { MiniPlayer } from "./components/MiniPlayer";
 import { PwaStatus } from "./components/PwaStatus";
 import {
   FavoriteTrackList,
@@ -66,6 +67,7 @@ export default function App() {
   const [seekPreview, setSeekPreview] = useState<number | null>(null);
   const [loopMode, setLoopMode] = useState<LoopMode>("all");
   const [autoPlay, setAutoPlay] = useState(true);
+  const [volume, setVolume] = useState(1);
   const [trackView, setTrackView] = useState<"album" | "favorites">("album");
   const [favorites, setFavorites] = useState(loadFavorites);
   const [favoriteMetadata, setFavoriteMetadata] = useState<Record<string, NsfMetadata>>({});
@@ -74,6 +76,7 @@ export default function App() {
   const [loadingAlbumId, setLoadingAlbumId] = useState<string | null>(null);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
   const handledEndedRevision = useRef(0);
+  const miniAutoloadStarted = useRef(false);
   const { metadata, error, muted, setLoadedFile, setLoading, setError, toggleMuted } =
     usePlayerStore();
   const theme = useMemo(() => adaptThemeForPlayer(getTheme(themeId)), [themeId]);
@@ -81,6 +84,7 @@ export default function App() {
     () => albums.find((album) => album.id === selectedAlbumId) ?? null,
     [selectedAlbumId]
   );
+  const isMiniMode = window.location.pathname.replace(/\/+$/, "") === "/mini";
   const albumFavoriteTracks = useMemo(() => {
     const tracks = new Set<number>();
     if (!selectedAlbumId) return tracks;
@@ -106,6 +110,10 @@ export default function App() {
   useEffect(() => {
     saveFavorites(favorites);
   }, [favorites]);
+
+  useEffect(() => {
+    engine.setMasterVolume(volume);
+  }, [volume]);
 
   useEffect(() => {
     const missingAlbumIds = [...new Set(favorites.map((favorite) => favorite.albumId))].filter(
@@ -168,10 +176,11 @@ export default function App() {
     setThemeId(next.id);
   };
 
-  const loadAlbum = async (
+  const loadAlbum = useCallback(
+    async (
     album: AlbumEntry,
     options: { track?: number; play?: boolean } = {}
-  ) => {
+    ) => {
     setLoadingAlbumId(album.id);
     setLoading(true);
     setError(null);
@@ -201,7 +210,23 @@ export default function App() {
     } finally {
       setLoadingAlbumId(null);
     }
-  };
+    },
+    [autoPlay, setError, setLoadedFile, setLoading]
+  );
+
+  useEffect(() => {
+    if (
+      !isMiniMode ||
+      selectedAlbumId ||
+      loadingAlbumId ||
+      miniAutoloadStarted.current ||
+      !albums[0]
+    ) {
+      return;
+    }
+    miniAutoloadStarted.current = true;
+    void loadAlbum(albums[0], { play: false });
+  }, [isMiniMode, loadingAlbumId, loadAlbum, selectedAlbumId]);
 
   const toggleTrackFavorite = (albumId: string, track: number) => {
     setFavorites((current) => toggleFavorite(current, albumId, track));
@@ -274,6 +299,35 @@ export default function App() {
   const cycleLoopMode = () => {
     setLoopMode((current) => (current === "off" ? "one" : current === "one" ? "all" : "off"));
   };
+
+  const changeVolume = (nextVolume: number) => {
+    setVolume(Math.min(1, Math.max(0, nextVolume)));
+  };
+
+  if (isMiniMode) {
+    return (
+      <MiniPlayer
+        albums={albums}
+        selectedAlbum={selectedAlbum}
+        loadingAlbumId={loadingAlbumId}
+        metadata={metadata}
+        snapshot={snapshot}
+        selectedTrack={selectedTrack}
+        themeId={themeId}
+        themes={listThemes()}
+        volume={volume}
+        error={error || playbackError}
+        onSelectAlbum={(album) => void loadAlbum(album, { play: false })}
+        onPlayTrack={(track) => void playTrack(track)}
+        onTogglePlayback={() => void togglePlayback()}
+        onMoveTrack={(direction) => void moveTrack(direction)}
+        onSeekPreview={(seconds) => setSeekPreview(seconds)}
+        onCommitSeek={commitSeek}
+        onSelectTheme={selectTheme}
+        onVolumeChange={changeVolume}
+      />
+    );
+  }
 
   return (
     <main className={`app-shell is-retro-font ${mobileCompact ? "is-mobile-compact" : ""}`}>

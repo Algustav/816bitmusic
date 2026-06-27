@@ -43,6 +43,8 @@ const CHANNELS: NesChannelId[] = ["pulse1", "pulse2", "triangle", "noise", "dpcm
 export class GmeRealtimeEngine implements NsfEngine {
   private context: AudioContext | null = null;
   private node: AudioWorkletNode | null = null;
+  private masterGain: GainNode | null = null;
+  private masterVolume = 1;
   private metadata: NsfMetadata | null = null;
   private fileData: ArrayBuffer | null = null;
   private fileGeneration = 0;
@@ -156,6 +158,13 @@ export class GmeRealtimeEngine implements NsfEngine {
     this.node.port.postMessage({ type: "seek", currentTimeMs: target * 1000 });
   }
 
+  setMasterVolume(volume: number): void {
+    this.masterVolume = Math.min(1, Math.max(0, volume));
+    if (this.masterGain && this.context) {
+      this.masterGain.gain.setTargetAtTime(this.masterVolume, this.context.currentTime, 0.01);
+    }
+  }
+
   setVoiceMuted(channel: NesChannelId, muted: boolean): void {
     this.muted.set(channel, muted);
     this.node?.port.postMessage({ type: "mute", channel, muted });
@@ -185,7 +194,9 @@ export class GmeRealtimeEngine implements NsfEngine {
   dispose(): void {
     this.stop();
     this.node?.disconnect();
+    this.masterGain?.disconnect();
     this.node = null;
+    this.masterGain = null;
     void this.context?.close();
     this.context = null;
     this.metadata = null;
@@ -234,7 +245,8 @@ export class GmeRealtimeEngine implements NsfEngine {
       const error = new Error("AudioWorklet 处理器异常终止。");
       this.failReady(error);
     };
-    this.node.connect(this.context.destination);
+    this.masterGain = new GainNode(this.context, { gain: this.masterVolume });
+    this.node.connect(this.masterGain).connect(this.context.destination);
   }
 
   private async ensureWasmBytes(): Promise<ArrayBuffer> {

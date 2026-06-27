@@ -30,6 +30,7 @@ export interface NsfEngine {
   play(track?: number): Promise<void>;
   pause(): void;
   stop(): void;
+  setMasterVolume(volume: number): void;
   setVoiceMuted(channel: NesChannelId, muted: boolean): void;
   getTelemetry(): readonly NesChannelTelemetry[];
   dispose(): void;

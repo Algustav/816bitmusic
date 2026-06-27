@@ -166,6 +166,10 @@ export class GmeMediaElementEngine implements NsfEngine {
     this.audio.currentTime = Math.min(this.duration, Math.max(0, seconds));
   }
 
+  setMasterVolume(volume: number): void {
+    this.audio.volume = Math.min(1, Math.max(0, volume));
+  }
+
   setVoiceMuted(channel: NesChannelId, muted: boolean): void {
     // The iOS HTTP compatibility engine uses one mixed media stream.
     void channel;
