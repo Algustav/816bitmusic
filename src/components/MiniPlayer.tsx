@@ -2,8 +2,9 @@ import { useMemo, useState } from "react";
 import type { PlaybackSnapshot } from "../audio/GmeRealtimeEngine";
 import type { NsfMetadata } from "../audio/types";
 import type { AlbumEntry } from "../library/albumLibrary";
+import { LayoutModeSwitch, type LayoutMode } from "./LayoutModeSwitch";
 
-type MiniPanel = "volume" | "theme" | "album" | "playlist" | null;
+type MiniPanel = "theme" | "album" | "playlist" | null;
 
 interface ThemeOption {
   id: string;
@@ -19,16 +20,15 @@ interface MiniPlayerProps {
   selectedTrack: number;
   themeId: string;
   themes: ThemeOption[];
-  volume: number;
   error: string | null;
+  onSelectLayoutMode: (mode: LayoutMode) => void;
   onSelectAlbum: (album: AlbumEntry) => void;
   onPlayTrack: (track: number) => void;
   onTogglePlayback: () => void;
-  onMoveTrack: (direction: -1 | 1) => void;
+  onMoveTrack: (direction: 1) => void;
   onSeekPreview: (seconds: number) => void;
   onCommitSeek: (seconds: number) => void;
   onSelectTheme: (themeId: string) => void;
-  onVolumeChange: (volume: number) => void;
 }
 
 function formatTime(seconds: number): string {
@@ -50,24 +50,22 @@ export function MiniPlayer({
   selectedTrack,
   themeId,
   themes,
-  volume,
   error,
+  onSelectLayoutMode,
   onSelectAlbum,
   onPlayTrack,
   onTogglePlayback,
   onMoveTrack,
   onSeekPreview,
   onCommitSeek,
-  onSelectTheme,
-  onVolumeChange
+  onSelectTheme
 }: MiniPlayerProps) {
   const [openPanel, setOpenPanel] = useState<MiniPanel>(null);
   const currentTitle = trackTitle(metadata, selectedTrack);
-  const caption = useMemo(() => {
-    if (!selectedAlbum && !metadata) return "Select an album / Ready";
-    return `${metadata?.title || selectedAlbum?.displayName || "Album"} / ${currentTitle}`;
-  }, [currentTitle, metadata, selectedAlbum]);
-  const canGoPrevious = Boolean(metadata && selectedTrack > 1 && snapshot.state !== "rendering");
+  const albumTitle = useMemo(
+    () => metadata?.title || selectedAlbum?.displayName || "Select an album",
+    [metadata, selectedAlbum]
+  );
   const canGoNext = Boolean(
     metadata && selectedTrack < metadata.trackCount && snapshot.state !== "rendering"
   );
@@ -80,19 +78,7 @@ export function MiniPlayer({
   return (
     <main className="mini-shell is-retro-font">
       <section className="mini-player" aria-label="8+16 bit mini player">
-        <div className="mini-player__brand" aria-hidden="true">
-          8<span>+</span>16 bit
-        </div>
-
         <div className="mini-player__transport">
-          <button
-            type="button"
-            aria-label="Previous track"
-            disabled={!canGoPrevious}
-            onClick={() => onMoveTrack(-1)}
-          >
-            ◀◀
-          </button>
           <button
             className="mini-player__play"
             type="button"
@@ -108,11 +94,14 @@ export function MiniPlayer({
             disabled={!canGoNext}
             onClick={() => onMoveTrack(1)}
           >
-            ▶▶
+            ▶
           </button>
         </div>
 
         <div className="mini-player__timeline">
+          <p className="mini-player__album" title={albumTitle}>
+            {albumTitle}
+          </p>
           <div className="mini-player__seek-row">
             <input
               className="mini-player__seek"
@@ -140,25 +129,19 @@ export function MiniPlayer({
               {formatTime(snapshot.duration)}
             </span>
           </div>
-          <p title={caption}>{caption}</p>
+          <p className="mini-player__track" title={currentTitle}>
+            {currentTitle}
+          </p>
         </div>
 
         <div className="mini-player__actions">
-          <button
-            type="button"
-            aria-label="Volume"
-            aria-expanded={openPanel === "volume"}
-            onClick={() => togglePanel("volume")}
-          >
-            ◕
-          </button>
           <button
             type="button"
             aria-label="Theme"
             aria-expanded={openPanel === "theme"}
             onClick={() => togglePanel("theme")}
           >
-            ◇
+            ◑
           </button>
           <button
             type="button"
@@ -180,23 +163,12 @@ export function MiniPlayer({
 
         {openPanel && (
           <div className={`mini-popover mini-popover--${openPanel}`}>
-            {openPanel === "volume" && (
-              <label className="mini-popover__control">
-                <span>Volume</span>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={volume}
-                  onChange={(event) => onVolumeChange(Number(event.target.value))}
-                />
-                <strong>{Math.round(volume * 100)}%</strong>
-              </label>
-            )}
-
             {openPanel === "theme" && (
-              <div className="mini-popover__list" role="listbox" aria-label="Theme">
+              <div
+                className="mini-popover__list mini-popover__list--theme"
+                role="listbox"
+                aria-label="Theme"
+              >
                 {themes.map((theme) => (
                   <button
                     className={theme.id === themeId ? "is-selected" : ""}
@@ -204,7 +176,10 @@ export function MiniPlayer({
                     type="button"
                     role="option"
                     aria-selected={theme.id === themeId}
-                    onClick={() => onSelectTheme(theme.id)}
+                    onClick={() => {
+                      onSelectTheme(theme.id);
+                      setOpenPanel(null);
+                    }}
                   >
                     {theme.name}
                   </button>
@@ -222,7 +197,10 @@ export function MiniPlayer({
                     role="option"
                     aria-selected={album.id === selectedAlbum?.id}
                     disabled={loadingAlbumId === album.id}
-                    onClick={() => onSelectAlbum(album)}
+                    onClick={() => {
+                      onSelectAlbum(album);
+                      setOpenPanel(null);
+                    }}
                   >
                     <span>{album.number.toString().padStart(2, "0")}</span>
                     {album.displayName}
@@ -243,7 +221,10 @@ export function MiniPlayer({
                         role="option"
                         aria-selected={track === selectedTrack}
                         disabled={snapshot.state === "rendering"}
-                        onClick={() => onPlayTrack(track)}
+                        onClick={() => {
+                          onPlayTrack(track);
+                          setOpenPanel(null);
+                        }}
                       >
                         <span>{track.toString().padStart(2, "0")}</span>
                         {trackTitle(metadata, track)}
@@ -260,6 +241,7 @@ export function MiniPlayer({
 
         {error && <p className="mini-player__error">{error}</p>}
       </section>
+      <LayoutModeSwitch mode="mini" onSelect={onSelectLayoutMode} />
     </main>
   );
 }

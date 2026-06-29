@@ -7,6 +7,7 @@ import { parseNsfMetadata } from "./audio/nsfMetadata";
 import { AlbumLibrary } from "./components/AlbumLibrary";
 import { ChannelRack } from "./components/ChannelRack";
 import { CrtOscilloscope } from "./components/CrtOscilloscope";
+import { LayoutModeSwitch, type LayoutMode } from "./components/LayoutModeSwitch";
 import { MiniPlayer } from "./components/MiniPlayer";
 import { PwaStatus } from "./components/PwaStatus";
 import {
@@ -20,6 +21,7 @@ import { usePlayerStore } from "./store/playerStore";
 import { adaptThemeForPlayer } from "./theme/adaptThemeForPlayer";
 
 const STORAGE_KEY = "chip-player-theme";
+const LAYOUT_MODE_KEY = "chip-player-layout-mode";
 const EMPTY_SNAPSHOT: PlaybackSnapshot = {
   state: "empty",
   track: 1,
@@ -51,6 +53,9 @@ function initialThemeId(): string {
 }
 
 function initialMobileCompact(): boolean {
+  const savedMode = localStorage.getItem(LAYOUT_MODE_KEY);
+  if (savedMode === "normal") return false;
+  if (savedMode === "compact") return true;
   return window.matchMedia("(max-width: 560px)").matches;
 }
 
@@ -67,7 +72,6 @@ export default function App() {
   const [seekPreview, setSeekPreview] = useState<number | null>(null);
   const [loopMode, setLoopMode] = useState<LoopMode>("all");
   const [autoPlay, setAutoPlay] = useState(true);
-  const [volume, setVolume] = useState(1);
   const [trackView, setTrackView] = useState<"album" | "favorites">("album");
   const [favorites, setFavorites] = useState(loadFavorites);
   const [favoriteMetadata, setFavoriteMetadata] = useState<Record<string, NsfMetadata>>({});
@@ -110,10 +114,6 @@ export default function App() {
   useEffect(() => {
     saveFavorites(favorites);
   }, [favorites]);
-
-  useEffect(() => {
-    engine.setMasterVolume(volume);
-  }, [volume]);
 
   useEffect(() => {
     const missingAlbumIds = [...new Set(favorites.map((favorite) => favorite.albumId))].filter(
@@ -300,8 +300,14 @@ export default function App() {
     setLoopMode((current) => (current === "off" ? "one" : current === "one" ? "all" : "off"));
   };
 
-  const changeVolume = (nextVolume: number) => {
-    setVolume(Math.min(1, Math.max(0, nextVolume)));
+  const selectLayoutMode = (mode: LayoutMode) => {
+    localStorage.setItem(LAYOUT_MODE_KEY, mode);
+    if (mode === "mini") {
+      if (!isMiniMode) window.location.href = "/mini";
+      return;
+    }
+    setMobileCompact(mode === "compact");
+    if (isMiniMode) window.location.href = "/";
   };
 
   if (isMiniMode) {
@@ -315,8 +321,8 @@ export default function App() {
         selectedTrack={selectedTrack}
         themeId={themeId}
         themes={listThemes()}
-        volume={volume}
         error={error || playbackError}
+        onSelectLayoutMode={selectLayoutMode}
         onSelectAlbum={(album) => void loadAlbum(album, { play: false })}
         onPlayTrack={(track) => void playTrack(track)}
         onTogglePlayback={() => void togglePlayback()}
@@ -324,7 +330,6 @@ export default function App() {
         onSeekPreview={(seconds) => setSeekPreview(seconds)}
         onCommitSeek={commitSeek}
         onSelectTheme={selectTheme}
-        onVolumeChange={changeVolume}
       />
     );
   }
@@ -594,24 +599,11 @@ export default function App() {
 
       <PwaStatus />
 
-      <button
-        className="mobile-layout-toggle"
-        type="button"
-        aria-pressed={mobileCompact}
-        onClick={() => setMobileCompact((compact) => !compact)}
-      >
-        MOBILE VIEW · {mobileCompact ? "COMPACT" : "ADAPTIVE"}
-      </button>
+      <LayoutModeSwitch
+        mode={mobileCompact ? "compact" : "normal"}
+        onSelect={selectLayoutMode}
+      />
 
-      <footer className="tools-footer">
-        <a
-          className="tools-footer__link"
-          href={`/mytools/todo-standalone/index.html?theme=${encodeURIComponent(themeId)}`}
-        >
-          <span aria-hidden="true">✓</span>
-          Todo List
-        </a>
-      </footer>
     </main>
   );
 }

@@ -98,39 +98,36 @@ button:disabled {
   display: none;
 }
 
-.mobile-layout-toggle,
 .mobile-theme-footer {
   display: none;
 }
 
-.tools-footer {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-  padding: 10px;
+.layout-mode-switch {
+  width: min(520px, 100%);
+  min-height: 34px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin: 12px auto 0;
+  border: 1px solid var(--line);
+  background: var(--line);
+  font-family: "Silkscreen", "Microsoft YaHei", "PingFang SC", sans-serif;
 }
 
-.tools-footer__link {
+.layout-mode-switch button {
   min-height: 34px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 13px;
-  border: 1px solid var(--line);
+  border: 0;
   color: var(--muted);
   background: var(--panel);
-  font-family: ui-monospace, monospace;
-  font-size: 10px;
-  font-weight: 900;
+  font-size: 11px;
   letter-spacing: 0.08em;
-  text-decoration: none;
+  text-transform: uppercase;
 }
 
-.tools-footer__link:hover {
-  border-color: var(--accent);
+.layout-mode-switch button:hover,
+.layout-mode-switch button.is-active {
   color: var(--accent);
+  background: color-mix(in srgb, var(--accent), var(--panel) 88%);
 }
 
 .pwa-status {
@@ -204,8 +201,7 @@ button:disabled {
 .app-shell.is-retro-font .track-row__duration,
 .app-shell.is-retro-font .track-row__copy small,
 .app-shell.is-retro-font .channel__number,
-.app-shell.is-retro-font .channel__mute,
-.app-shell.is-retro-font .tools-footer__link {
+.app-shell.is-retro-font .channel__mute {
   font-family: "IBM Plex Mono", "Microsoft YaHei", "PingFang SC", monospace;
 }
 
@@ -236,6 +232,7 @@ button:disabled {
 .mini-shell {
   min-height: 100vh;
   display: grid;
+  grid-template-rows: 1fr auto;
   place-items: center;
   padding: 18px;
   background:
@@ -255,10 +252,10 @@ button:disabled {
   position: relative;
   width: min(1120px, 100%);
   display: grid;
-  grid-template-columns: auto auto minmax(220px, 1fr) auto;
+  grid-template-columns: auto minmax(220px, 1fr) auto;
   align-items: center;
-  gap: 18px;
-  padding: 18px 22px;
+  gap: 12px;
+  padding: 14px 18px;
   border: 1px solid color-mix(in srgb, var(--line), white 8%);
   border-radius: 14px;
   background: color-mix(in srgb, var(--panel), transparent 4%);
@@ -283,13 +280,13 @@ button:disabled {
 .mini-player__actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
 }
 
 .mini-player__transport button,
 .mini-player__actions button {
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
   padding: 0;
@@ -318,10 +315,15 @@ button:disabled {
   box-shadow: 0 0 18px var(--glow-a);
 }
 
+.mini-player__transport button:not(.mini-player__play) {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .mini-player__timeline {
   min-width: 0;
   display: grid;
-  gap: 6px;
+  gap: 5px;
 }
 
 .mini-player__seek-row {
@@ -391,15 +393,21 @@ button:disabled {
   white-space: nowrap;
 }
 
-.mini-player__timeline p {
+.mini-player__album,
+.mini-player__track {
   max-width: 100%;
   margin: 0;
   overflow: hidden;
   color: var(--muted);
   font-size: 10px;
   letter-spacing: 0.03em;
+  text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.mini-player__album {
+  color: var(--text);
 }
 
 .mini-popover {
@@ -445,22 +453,31 @@ button:disabled {
 
 .mini-popover__list button,
 .mini-popover__empty {
-  min-height: 42px;
+  min-height: 34px;
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   margin: 0;
-  padding: 0 12px;
+  padding: 0 10px;
   border: 0;
   color: var(--text);
   background: var(--panel);
+  font-size: 11px;
   text-align: left;
+  white-space: nowrap;
 }
 
 .mini-popover__list button span {
   color: var(--accent);
-  font-size: 10px;
+  font-size: 9px;
+}
+
+.mini-popover__list--theme button {
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mini-popover__list button:hover,
@@ -1315,22 +1332,22 @@ button:disabled {
 
 @media (max-width: 860px) {
   .mini-player {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 12px;
   }
 
-  .mini-player__brand {
-    grid-column: 1;
-  }
-
   .mini-player__transport {
-    grid-column: 2;
+    grid-column: 1;
     grid-row: 1;
   }
 
-  .mini-player__timeline,
+  .mini-player__timeline {
+    grid-column: 2;
+  }
+
   .mini-player__actions {
-    grid-column: 1 / -1;
+    grid-column: 3;
+    grid-row: 1;
   }
 
   .mini-player__actions {
@@ -1383,24 +1400,49 @@ button:disabled {
   }
 
   .mini-player {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 13px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 6px;
+    padding: 11px;
     border-radius: 12px;
-  }
-
-  .mini-player__brand {
-    font-size: 15px;
   }
 
   .mini-player__transport {
     grid-column: 1;
-    grid-row: auto;
+    grid-row: 1;
     justify-content: center;
   }
 
+  .mini-player__timeline {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
   .mini-player__actions {
-    justify-content: space-between;
+    grid-column: 3;
+    grid-row: 1;
+    justify-content: flex-end;
+  }
+
+  .mini-player__transport,
+  .mini-player__actions {
+    gap: 2px;
+  }
+
+  .mini-player__transport button,
+  .mini-player__actions button {
+    width: 30px;
+    height: 30px;
+  }
+
+  .layout-mode-switch {
+    width: 100%;
+    min-height: 30px;
+    margin-top: 7px;
+  }
+
+  .layout-mode-switch button {
+    min-height: 30px;
+    font-size: 9px;
   }
 
   .mini-player__seek-row {
@@ -1454,24 +1496,6 @@ button:disabled {
     display: none;
   }
 
-  .mobile-layout-toggle {
-    width: 100%;
-    min-height: 34px;
-    display: block;
-    margin: 8px 0 0;
-    border: 1px solid var(--line);
-    color: var(--muted);
-    background: var(--panel);
-    font-family: ui-monospace, monospace;
-    font-size: 9px;
-    font-weight: 900;
-    letter-spacing: 0.1em;
-  }
-
-  .mobile-layout-toggle[aria-pressed="true"] {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
 
   .metadata-grid,
   .metadata-grid {
@@ -1556,7 +1580,7 @@ button:disabled {
     line-height: 1;
   }
 
-  .is-mobile-compact .mobile-layout-toggle {
+  .is-mobile-compact .layout-mode-switch {
     min-height: 30px;
     margin-top: 5px;
   }
@@ -1738,8 +1762,4 @@ button:disabled {
     padding: 8px;
   }
 
-  .is-mobile-compact .tools-footer {
-    margin-top: 5px;
-    padding: 5px;
-  }
 }
