@@ -59,6 +59,10 @@ function initialMobileCompact(): boolean {
   return window.matchMedia("(max-width: 560px)").matches;
 }
 
+function currentRoutePath(): string {
+  return window.location.pathname.replace(/\/+$/, "") || "/";
+}
+
 function formatTime(seconds: number): string {
   const safe = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
   const minutes = Math.floor(safe / 60);
@@ -76,6 +80,7 @@ export default function App() {
   const [favorites, setFavorites] = useState(loadFavorites);
   const [favoriteMetadata, setFavoriteMetadata] = useState<Record<string, NsfMetadata>>({});
   const [mobileCompact, setMobileCompact] = useState(initialMobileCompact);
+  const [routePath, setRoutePath] = useState(currentRoutePath);
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
   const [loadingAlbumId, setLoadingAlbumId] = useState<string | null>(null);
   const [playbackError, setPlaybackError] = useState<string | null>(null);
@@ -88,7 +93,7 @@ export default function App() {
     () => albums.find((album) => album.id === selectedAlbumId) ?? null,
     [selectedAlbumId]
   );
-  const isMiniMode = window.location.pathname.replace(/\/+$/, "") === "/mini";
+  const isMiniMode = routePath === "/mini";
   const albumFavoriteTracks = useMemo(() => {
     const tracks = new Set<number>();
     if (!selectedAlbumId) return tracks;
@@ -114,6 +119,12 @@ export default function App() {
   useEffect(() => {
     saveFavorites(favorites);
   }, [favorites]);
+
+  useEffect(() => {
+    const syncRoute = () => setRoutePath(currentRoutePath());
+    window.addEventListener("popstate", syncRoute);
+    return () => window.removeEventListener("popstate", syncRoute);
+  }, []);
 
   useEffect(() => {
     const missingAlbumIds = [...new Set(favorites.map((favorite) => favorite.albumId))].filter(
@@ -303,11 +314,17 @@ export default function App() {
   const selectLayoutMode = (mode: LayoutMode) => {
     localStorage.setItem(LAYOUT_MODE_KEY, mode);
     if (mode === "mini") {
-      if (!isMiniMode) window.location.href = "/mini";
+      if (!isMiniMode) {
+        window.history.pushState({}, "", "/mini");
+        setRoutePath("/mini");
+      }
       return;
     }
     setMobileCompact(mode === "compact");
-    if (isMiniMode) window.location.href = "/";
+    if (isMiniMode) {
+      window.history.pushState({}, "", "/");
+      setRoutePath("/");
+    }
   };
 
   if (isMiniMode) {
