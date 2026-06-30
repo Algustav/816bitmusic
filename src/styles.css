@@ -416,7 +416,7 @@ button:disabled {
   bottom: calc(100% + 10px);
   z-index: 5;
   width: min(360px, calc(100vw - 36px));
-  max-height: min(420px, calc(100vh - 120px));
+  max-height: min(260px, calc(100vh - 120px));
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -1451,8 +1451,12 @@ button:disabled {
   }
 
   .mini-popover {
+    position: fixed;
     right: 10px;
-    bottom: calc(100% + 8px);
+    left: 10px;
+    bottom: 150px;
+    width: auto;
+    max-height: calc(100dvh - 170px);
   }
 
   .app-shell {

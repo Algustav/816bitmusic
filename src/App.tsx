@@ -190,7 +190,7 @@ export default function App() {
   const loadAlbum = useCallback(
     async (
     album: AlbumEntry,
-    options: { track?: number; play?: boolean } = {}
+    options: { track?: number; play?: boolean; requirePlayback?: boolean } = {}
     ) => {
     setLoadingAlbumId(album.id);
     setLoading(true);
@@ -214,7 +214,19 @@ export default function App() {
       setSelectedAlbumId(album.id);
       if (options.play ?? autoPlay) {
         await engine.play(targetTrack);
-        setSnapshot(engine.getSnapshot());
+        const playbackSnapshot = engine.getSnapshot();
+        setSnapshot(playbackSnapshot);
+        if (options.requirePlayback) {
+          const confirmPlayback = () => {
+            const latestSnapshot = engine.getSnapshot();
+            setSnapshot(latestSnapshot);
+            if (latestSnapshot.state !== "playing" && latestSnapshot.state !== "rendering") {
+              setPlaybackError("Tap play to start.");
+            }
+          };
+          window.setTimeout(confirmPlayback, 500);
+          window.setTimeout(confirmPlayback, 3000);
+        }
       }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "无法读取专辑。");
@@ -340,7 +352,9 @@ export default function App() {
         themes={listThemes()}
         error={error || playbackError}
         onSelectLayoutMode={selectLayoutMode}
-        onSelectAlbum={(album) => void loadAlbum(album, { play: false })}
+        onSelectAlbum={(album) =>
+          void loadAlbum(album, { track: 1, play: true, requirePlayback: true })
+        }
         onPlayTrack={(track) => void playTrack(track)}
         onTogglePlayback={() => void togglePlayback()}
         onMoveTrack={(direction) => void moveTrack(direction)}
